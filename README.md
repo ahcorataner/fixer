@@ -42,19 +42,12 @@
 </p>
 
 ---
-
 <p align="center">
-  <table>
-    <tr>
-      <td style="border: 2px solid #0a1f44; padding: 10px; border-radius: 10px;">
-        <img src="imagens/fixer.png" alt="FIXER" width="450">
-      </td>
-    </tr>
-  </table>
+  <img src="imagens/fixer.png" alt="FIXER" width="450" border="6">
 </p>
 
 <p align="center">
-  <strong><font size="5">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
+  <strong><font size="8">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
 </p>
 
 ## 1. Descrição do Projeto
