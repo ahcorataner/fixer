@@ -43,13 +43,18 @@
 
 ---
 <p align="center">
-  <img src="imagens/fixer.png" alt="FIXER" width="450" border="6">
+  <table align="center">
+    <tr>
+      <td style="border: 4px solid #0a1f44; padding: 12px;">
+        <img src="imagens/fixer.png" alt="FIXER" width="450">
+      </td>
+    </tr>
+  </table>
 </p>
 
 <p align="center">
-  <strong><font size="8">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
+  <strong><font size="5">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
 </p>
-
 ## 1. Descrição do Projeto
 
 O **FIXER** é uma plataforma desenvolvida para apoiar a **gestão de manutenção de ativos**, reunindo em um único sistema informações relevantes para acompanhamento, controle e planejamento das atividades de manutenção.
