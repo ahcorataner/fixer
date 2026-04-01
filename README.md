@@ -149,7 +149,7 @@ As imagens, protótipos e materiais visuais do projeto poderão ser armazenados 
 imagens/
 ```
 
-Exemplo de uso no README:
+Exemplo de uso:
 
 <p align="center">
   <img src="imagens/exemplo.png" alt="Protótipo do sistema FIXER" width="750">
