@@ -44,10 +44,17 @@
 ---
 
 <p align="center">
-  <img src="imagens/fixer.png" alt="FIXER" width="450" 
-       style="border: 2px solid #0a1f44; border-radius: 12px; padding: 10px; background-color: #f5f7fa;">
-  <br>
-  <span style="font-size:18px;"><strong>Plataforma de Gestão e Confiabilidade de Ativos</strong></span>
+  <table>
+    <tr>
+      <td style="border: 2px solid #0a1f44; padding: 10px; border-radius: 10px;">
+        <img src="imagens/fixer.png" alt="FIXER" width="450">
+      </td>
+    </tr>
+  </table>
+</p>
+
+<p align="center">
+  <strong><font size="5">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
 </p>
 
 ## 1. Descrição do Projeto
