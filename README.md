@@ -10,8 +10,8 @@
   <strong>Disciplinas: Projeto e Desenvolvimento de Software | Banco de Dados</strong><br><br>
   <strong>Discentes:</strong><br>
   <strong>Renata Costa Rocha</strong><br>
-  <strong>Raphael Câmara Sá</strong>
-  <strong>Luis Eduardo Baima do Lago Melonio Junior</strong> 
+  <strong>Raphael Câmara Sá</strong><br>
+  <strong>Luis Eduardo Baima do Lago Melonio Junior</strong><br>
 </p>
 
 <hr>
