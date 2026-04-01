@@ -7,10 +7,11 @@
   <strong>Universidade Federal do Maranhão</strong><br>
   <strong>Centro de Ciências Exatas e Tecnologias</strong><br>
   <strong>Curso de Engenharia da Computação</strong><br>
-  <strong>Disciplina: Projeto e Desenvolvimento de Software</strong><br><br>
+  <strong>Disciplinas: Projeto e Desenvolvimento de Software | Banco de Dados</strong><br><br>
   <strong>Discentes:</strong><br>
   <strong>Renata Costa Rocha</strong><br>
   <strong>Raphael Câmara Sá</strong>
+  <strong>Luis Eduardo Baima do Lago Melonio Junior</strong> 
 </p>
 
 <hr>
@@ -179,5 +180,9 @@ Para dúvidas, sugestões ou informações relacionadas ao projeto:
 
 - **Raphael Câmara Sá**  
   📧 <raphael.sa@discente.ufma.br>
+
+- **Luis Eduardo Baima do Lago Melonio Junior**  
+  📧 <leblmjunior@hotmail.com>
+  
 
 ````
