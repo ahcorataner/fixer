@@ -58,7 +58,7 @@
 
 ## 1. Descrição do Projeto
 
-O **FIXER** é uma plataforma desenvolvida para apoiar a **gestão de manutenção de ativos**, reunindo em um único sistema informações relevantes para acompanhamento, controle e planejamento das atividades de manutenção.
+O **FIXER** é uma plataforma desenvolvida para apoiar a **gestão de manutenção de ativos,** reunindo em um único sistema informações relevantes para acompanhamento, controle e planejamento das atividades de manutenção.
 
 A proposta busca substituir abordagens reativas por uma gestão mais estruturada, baseada em monitoramento contínuo, organização do histórico de intervenções e acompanhamento de indicadores de desempenho.
 
@@ -101,7 +101,7 @@ Entre as principais funcionalidades previstas para o sistema, destacam-se:
 - Painel de indicadores de desempenho, como:
   - **MTBF** (Tempo Médio entre Falhas);
   - **MTTR** (Tempo Médio de Reparo);
-  - **Disponibilidade do ativo**.
+  - **Disponibilidade do ativo.**
 
 ---
 
@@ -180,7 +180,7 @@ Além do caráter acadêmico, o projeto possui potencial de aplicabilidade em am
 
 ## 11. Licença
 
-Este projeto possui finalidade **acadêmica**, sendo desenvolvido no contexto da disciplina de **Projeto e Desenvolvimento de Software** do curso de Engenharia da Computação da UFMA.
+Este projeto possui finalidade **acadêmica,** sendo desenvolvido no contexto da disciplina de **Projeto e Desenvolvimento de Software** e **Banco de Dados** do curso de Engenharia da Computação da UFMA.
 
 ---
 
