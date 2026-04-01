@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="imagens/ufma.png" alt="UFMA" width="220">
+  <img src="imagens/ufma.png" alt="UFMA" width="180">
 </p>
 
 <p align="center">
@@ -17,13 +17,13 @@
 
 <p align="center">
   <em>
-    Este repositório apresenta o desenvolvimento do <strong>FIXER</strong>, uma plataforma voltada à 
+    Este repositório apresenta o desenvolvimento do <strong>FIXER,</strong> uma plataforma voltada à 
     <strong>gestão de manutenção de ativos</strong>, idealizada no contexto acadêmico da disciplina de 
-    <strong>Projeto e Desenvolvimento de Software</strong>, do curso de Engenharia da Computação da 
+    <strong>Projeto e Desenvolvimento de Software,</strong> do curso de Engenharia da Computação da 
     Universidade Federal do Maranhão.
     <br><br>
     A proposta do projeto consiste em oferecer uma solução centralizada para o gerenciamento do ciclo de vida 
-    de ativos físicos, com ênfase em estratégias de <strong>manutenção preventiva e preditiva</strong>, 
+    de ativos físicos, com ênfase em estratégias de <strong>manutenção preventiva e preditiva,</strong>
     contribuindo para a redução de falhas operacionais, otimização de custos e melhoria da confiabilidade dos ativos.
     <br><br>
     O desenvolvimento do sistema contempla aspectos de modelagem, organização funcional, prototipação e documentação, 
@@ -174,7 +174,10 @@ Este projeto possui finalidade **acadêmica**, sendo desenvolvido no contexto da
 
 Para dúvidas, sugestões ou informações relacionadas ao projeto:
 
-* **Renata Costa Rocha**
-* **Raphael Câmara Sá**
+- **Renata Costa Rocha**  
+  📧 <renata.rocha@discente.ufma.br>
+
+- **Raphael Câmara Sá**  
+  📧 <raphael.sa@discente.ufma.br>
 
 ````
