@@ -44,8 +44,9 @@
 ---
 
 <p align="center">
-  <img src="imagens/fixer.png" alt="FIXER" width="300"><br>
-  <strong>Plataforma de Gestão de Manutenção de Ativos</strong>
+  <img src="imagens/fixer.png" alt="FIXER" width="500">
+  <br>
+  <span style="font-size:14px;"><strong>Plataforma de Gestão e Confiabilidade de Ativos</strong></span>
 </p>
 
 ## 1. Descrição do Projeto
