@@ -53,7 +53,7 @@
 </p>
 
 <p align="center">
-  <strong><font size="7">Plataforma de Gestão e Confiabilidade de Ativos</font></strong>
+  <h3 align="center">Plataforma de Gestão e Confiabilidade de Ativos</h3>
 </p>
 
 ## 1. Descrição do Projeto
