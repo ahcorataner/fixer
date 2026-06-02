@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { supabase } from "./supabaseClient"; // Importando o cliente que criamos
+import { supabase } from "./supabaseClient";
 
-export default function Login({ onLoginSuccess, onNavigateToRegister }) {
+export default function Login({ onLoginSuccess, onNavigateToRegister, onNavigateToForgotPassword }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,7 +12,6 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }) {
     setError("");
     setLoading(true);
 
-    // O Supabase cuida da autenticação e criptografia de ponta a ponta
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
@@ -93,7 +92,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }) {
             </div>
           </div>
 
-          {/* Botão Entrar com efeito Glow e estado de Loading */}
+          {/* Botão Entrar */}
           <button
             type="submit"
             disabled={loading}
@@ -104,14 +103,18 @@ export default function Login({ onLoginSuccess, onNavigateToRegister }) {
 
           {/* Link Esqueceu sua senha */}
           <div className="text-center pt-2 select-none">
-            <a href="#" className="text-xs font-bold text-[#00aedc] hover:underline tracking-wide">
+            <button 
+              type="button"
+              onClick={onNavigateToForgotPassword}
+              className="text-xs font-bold text-[#00aedc] hover:underline tracking-wide bg-transparent border-0 cursor-pointer p-0 transition-all"
+            >
               Esqueceu sua senha?
-            </a>
+            </button>
           </div>
         </form>
       </div>
 
-      {/* 🔗 BLOCO REGISTRAR-SE (Com a função que conecta ao App.jsx) */}
+      {/* 🔗 BLOCO REGISTRAR-SE */}
       <div className="w-full max-w-md bg-[#111827]/40 border border-gray-800/80 rounded-xl py-4 px-8 mt-4 text-center text-xs select-none">
         <span className="text-gray-400">Não tem uma conta? </span>
         <button 

@@ -1,20 +1,42 @@
 import { useState, useEffect } from 'react';
 import Login from './Login';
 import Register from './Register';
+import ForgotPassword from './ForgotPassword';
 import { supabase } from './supabaseClient';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState('Admin');
+  const [userName, setUserName] = useState('Admin'); // Guardará o @usuario
+  const [fullName, setFullName] = useState('Usuário'); // Guardará o Primeiro Nome
   const [loading, setLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState('login');
+
+  // Função para buscar dados extras da tabela pública 'perfis'
+  const fetchUserProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('perfis')
+        .select('nome_completo, usuario')
+        .eq('id', userId)
+        .single();
+
+      if (data) {
+        // Pega apenas o primeiro nome do Nome Completo
+        const firstName = data.nome_completo.split(' ')[0];
+        setFullName(firstName);
+        setUserName(data.usuario);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar perfil:", err);
+    }
+  };
 
   useEffect(() => {
     // Monitora a sessão ativa do Supabase
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
       if (session?.user) {
-        setUserName(session.user.email.split('@')[0]);
+        fetchUserProfile(session.user.id);
       }
       setLoading(false);
     });
@@ -23,8 +45,9 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       if (session?.user) {
-        setUserName(session.user.email.split('@')[0]);
+        fetchUserProfile(session.user.id);
       } else {
+        setFullName('Usuário');
         setUserName('Admin');
       }
     });
@@ -50,19 +73,23 @@ export default function App() {
     if (currentScreen === 'register') {
       return <Register onNavigateToLogin={() => setCurrentScreen('login')} />;
     }
+    if (currentScreen === 'forgotPassword') {
+      return <ForgotPassword onNavigateToLogin={() => setCurrentScreen('login')} />;
+    }
     return (
       <Login 
         onLoginSuccess={() => setIsAuthenticated(true)} 
         onNavigateToRegister={() => setCurrentScreen('register')} 
+        onNavigateToForgotPassword={() => setCurrentScreen('forgotPassword')}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-gray-100 flex font-sans antialiased selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#070b14] text-gray-100 flex font-sans antialiased selection:bg-cyan-500 selection:text-white w-full">
       
       {/* 📁 MENU LATERAL (SIDEBAR) */}
-      <aside className="w-64 bg-[#0c1220] border-r border-gray-800/40 flex flex-col justify-between p-4 hidden md:flex selection:bg-transparent">
+      <aside className="w-64 bg-[#0c1220] border-r border-gray-800/40 flex flex-col justify-between p-4 hidden md:flex shrink-0 select-none selection:bg-transparent">
         <div className="space-y-6">
           
           {/* Logo FIXER com Chave Inglesa */}
@@ -79,7 +106,6 @@ export default function App() {
             
             {/* Link: Dashboard (Ativo) */}
             <a href="#" className="flex items-center space-x-3.5 bg-[#0e2238] border border-cyan-500/20 text-[#00d2ff] px-4 py-3 rounded-xl font-bold text-sm transition-all">
-              {/* Ícone Grid de 4 Quadrados */}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
@@ -88,7 +114,6 @@ export default function App() {
 
             {/* Link: Ativos */}
             <a href="#" className="flex items-center space-x-3.5 text-gray-400 hover:bg-[#111827]/40 hover:text-white px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-              {/* Ícone Caixa/Cubo */}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-14L4 7m8 4v10M4 7v10l8 4" />
               </svg>
@@ -97,7 +122,6 @@ export default function App() {
 
             {/* Link: Ordens de Manutenção */}
             <a href="#" className="flex items-center space-x-3.5 text-gray-400 hover:bg-[#111827]/40 hover:text-white px-4 py-3 rounded-xl font-semibold text-sm transition-all leading-snug">
-              {/* Ícone Prancheta/Ficha */}
               <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
@@ -106,7 +130,6 @@ export default function App() {
 
             {/* Link: Histórico */}
             <a href="#" className="flex items-center space-x-3.5 text-gray-400 hover:bg-[#111827]/40 hover:text-white px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-              {/* Ícone Relógio com Seta */}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -117,23 +140,29 @@ export default function App() {
         </div>
 
         {/* Bloco do Usuário & Sair (Rodapé da Sidebar) */}
-        <div className="border-t border-gray-800/40 pt-4 flex items-center justify-between px-1.5 selection:bg-transparent">
-          {/* Avatar + Nome Alinhados */}
-          <div className="flex items-center space-x-3 min-w-0">
+        <div className="border-t border-gray-800/40 pt-4 flex items-center justify-between px-1.5 select-none selection:bg-transparent">
+          {/* Avatar + Textos Alinhados de forma simétrica */}
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
             {/* Ícone Redondo com Letra */}
             <div className="w-9 h-9 rounded-xl bg-[#112240] border border-cyan-500/20 flex items-center justify-center font-bold text-cyan-400 text-sm shrink-0 capitalize">
-              {userName.charAt(0)}
+              {fullName.charAt(0)}
             </div>
-            {/* Nome do Usuário Centralizado Verticalmente */}
-            <span className="font-bold text-white text-sm truncate capitalize">
-              {userName}
-            </span>
+            
+            {/* Informações de Nome e Usuário Empilhadas */}
+            <div className="flex flex-col min-w-0 leading-tight justify-center">
+              <span className="font-bold text-white text-sm truncate capitalize">
+                {fullName}
+              </span>
+              <span className="text-xs font-medium text-gray-500 truncate mt-0.5">
+                @{userName}
+              </span>
+            </div>
           </div>
 
           {/* Ícone de Sair na Direita */}
           <button 
             onClick={handleLogout}
-            className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all shrink-0"
+            className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all shrink-0 ml-2"
             title="Sair do sistema"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -143,25 +172,31 @@ export default function App() {
         </div>
       </aside>
 
-      {/* 🖥️ CONTEÚDO PRINCIPAL */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#070b14] overflow-y-auto">
+      {/* 🖥️ CONTEÚDO PRINCIPAL (OCUPA 100% DO ESPAÇO RESTANTE) */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#070b14] overflow-y-auto w-full">
         
         {/* BARRA SUPERIOR */}
-        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-gray-900">
+        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-gray-900 w-full shrink-0 select-none">
           <h1 className="text-lg font-bold text-white tracking-wide">Dashboard</h1>
+          
+          {/* Data Dinâmica Atualizada Automaticamente */}
           <div className="text-xs font-semibold text-gray-500 tracking-wider uppercase">
-            Quinta-feira, 28 de Maio
+            {new Date().toLocaleDateString('pt-BR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long'
+            })}
           </div>
         </header>
 
-        {/* ÁREA DE CARDS E GRÁFICOS */}
-        <div className="p-6 md:p-8 space-y-6 max-w-7xl w-full">
+        {/* ÁREA DE CARDS E GRÁFICOS (w-full completo sem amarras) */}
+        <div className="p-6 md:p-8 space-y-6 w-full flex-1">
           
-          {/* ⚡ 1. ROW DE METRICAS (MTBF, MTTR, Disponibilidade) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* ⚡ 1. ROW DE METRICAS (Expandido de ponta a ponta) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
             
             {/* Card MTBF */}
-            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm">
+            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm w-full">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase block">MTBF</span>
                 <h3 className="text-2xl font-black text-white">720h</h3>
@@ -173,7 +208,7 @@ export default function App() {
             </div>
 
             {/* Card MTTR */}
-            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm">
+            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm w-full">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase block">MTTR</span>
                 <h3 className="text-2xl font-black text-white">4.5h</h3>
@@ -185,7 +220,7 @@ export default function App() {
             </div>
 
             {/* Card Disponibilidade */}
-            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm">
+            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 flex justify-between items-start shadow-sm w-full">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase block">Disponibilidade</span>
                 <h3 className="text-2xl font-black text-white">98.4%</h3>
@@ -198,12 +233,19 @@ export default function App() {
 
           </div>
 
-          {/* ⚡ 2. ROW DO MEIO (Ativos por Status e Manutenções Recentes) */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          {/* ⚡ 2. ROW DO MEIO (Dividido em 50% / 50% simétricos com ícones ciano) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
             
-            {/* Bloco: Ativos por Status (Peso 3/5) */}
-            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 lg:col-span-3 space-y-4">
-              <h4 className="text-xs font-bold text-white tracking-wide uppercase">Ativos por Status</h4>
+            {/* Bloco: Ativos por Status */}
+            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 space-y-4 w-full">
+              <h4 className="text-xs font-bold text-white tracking-wide uppercase flex items-center space-x-2.5">
+                {/* Ícone de Gráfico/Status Ciano */}
+                <svg className="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                <span>Ativos por Status</span>
+              </h4>
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center space-x-2">
@@ -229,9 +271,15 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloco: Manutenções Recentes (Peso 2/5) */}
-            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 lg:col-span-2 space-y-4">
-              <h4 className="text-xs font-bold text-white tracking-wide uppercase">Manutenções Recentes</h4>
+            {/* Bloco: Manutenções Recentes */}
+            <div className="bg-[#0c1220] p-5 rounded-xl border border-gray-800/40 space-y-4 w-full">
+              <h4 className="text-xs font-bold text-white tracking-wide uppercase flex items-center space-x-2.5">
+                {/* Ícone de Lista/Prancheta Ciano */}
+                <svg className="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span>Manutenções Recentes</span>
+              </h4>
               <div className="divide-y divide-gray-800/60">
                 <div className="py-2.5 first:pt-0">
                   <p className="text-xs font-bold text-white">Compressor AR-01</p>
@@ -250,20 +298,18 @@ export default function App() {
 
           </div>
 
-          {/* ⚡ 3. ROW INFERIOR (Cronograma de Manutenções / Linha do Tempo Corrigido) */}
-          <div className="bg-[#0c1220] p-6 rounded-xl border border-gray-800/40 space-y-6">
+          {/* ⚡ 3. ROW INFERIOR (Cronograma de Manutenções esticado 100%) */}
+          <div className="bg-[#0c1220] p-6 rounded-xl border border-gray-800/40 space-y-6 w-full">
             
-            {/* Cabeçalho do Cronograma com Ícone SVG Real */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/40 pb-4">
               <h4 className="text-sm font-bold text-white tracking-wide uppercase flex items-center space-x-2.5">
-                {/* Ícone de Calendário Real em SVG */}
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                {/* Ícone do Calendário na cor Ciano */}
+                <svg className="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>Cronograma de Manutenções</span>
               </h4>
               
-              {/* Legendas de Status */}
               <div className="flex flex-wrap gap-4 text-[10px] font-bold tracking-wider uppercase">
                 <div className="flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -284,9 +330,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Tabela Gantt com Formato de Pílulas Isoladas e Posições Alinhadas */}
-            <div className="overflow-x-auto">
-              <div className="min-w-[700px] space-y-3">
+            <div className="overflow-x-auto w-full">
+              <div className="min-w-[700px] space-y-3 w-full">
                 
                 {/* Cabeçalho de Datas */}
                 <div className="grid grid-cols-8 text-center text-[10px] font-bold text-gray-500 tracking-wider uppercase pb-2 border-b border-gray-800/20">
@@ -300,7 +345,7 @@ export default function App() {
                   <div>21/04</div>
                 </div>
 
-                {/* Linha 1: Compressor AR-01 (Ocupa 15, 16 e 17) */}
+                {/* Linha 1: Compressor AR-01 */}
                 <div className="grid grid-cols-8 items-center h-10 border-b border-gray-800/20 last:border-0 py-1">
                   <div className="text-xs font-bold text-white pl-2">Compressor AR-01</div>
                   <div className="col-span-3 px-1">
@@ -311,10 +356,10 @@ export default function App() {
                   <div className="col-span-4"></div>
                 </div>
 
-                {/* Linha 2: Bomba HID-03 (Começa no dia 16 e vai até o dia 19) */}
+                {/* Linha 2: Bomba HID-03 */}
                 <div className="grid grid-cols-8 items-center h-10 border-b border-gray-800/20 last:border-0 py-1">
                   <div className="text-xs font-bold text-white pl-2">Bomba HID-03</div>
-                  <div></div> {/* Pula dia 15 */}
+                  <div></div>
                   <div className="col-span-4 px-1">
                     <div className="bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold text-[10px] py-1 rounded-full text-center tracking-wide uppercase">
                       Corretiva
@@ -323,10 +368,10 @@ export default function App() {
                   <div className="col-span-2"></div>
                 </div>
 
-                {/* Linha 3: Motor EL-12 (Ocupa os dias 19, 20 e 21) */}
+                {/* Linha 3: Motor EL-12 */}
                 <div className="grid grid-cols-8 items-center h-10 border-b border-gray-800/20 last:border-0 py-1">
                   <div className="text-xs font-bold text-white pl-2">Motor EL-12</div>
-                  <div className="col-span-4"></div> {/* Pula 15, 16, 17 e 18 */}
+                  <div className="col-span-4"></div>
                   <div className="col-span-3 px-1">
                     <div className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold text-[10px] py-1 rounded-full text-center tracking-wide uppercase">
                       Preventiva
@@ -334,10 +379,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Linha 4: Prensa PR-08 (Ocupa os dias 16, 17 e 18) */}
+                {/* Linha 4: Prensa PR-08 */}
                 <div className="grid grid-cols-8 items-center h-10 border-b border-gray-800/20 last:border-0 py-1">
                   <div className="text-xs font-bold text-white pl-2">Prensa PR-08</div>
-                  <div></div> {/* Pula dia 15 */}
+                  <div></div>
                   <div className="col-span-3 px-1">
                     <div className="bg-red-500/15 text-red-400 border border-red-500/30 font-bold text-[10px] py-1 rounded-full text-center tracking-wide uppercase">
                       Urgente
@@ -346,7 +391,7 @@ export default function App() {
                   <div className="col-span-3"></div>
                 </div>
 
-                {/* Linha 5: Gerador GE-02 (Ocupa dias 15 e 16) */}
+                {/* Linha 5: Gerador GE-02 */}
                 <div className="grid grid-cols-8 items-center h-10 border-b border-gray-800/20 last:border-0 py-1">
                   <div className="text-xs font-bold text-white pl-2">Gerador GE-02</div>
                   <div className="col-span-2 px-1">
