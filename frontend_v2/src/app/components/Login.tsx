@@ -63,7 +63,7 @@ export function Login() {
               className="mx-auto max-w-[420px] object-contain drop-shadow-2xl"
             />
             <h1 className="mt-8 text-3xl font-bold text-slate-800 tracking-widest">
-              GESTÃO DE MANUTENÇÃO
+              GESTÃO E CONFIABILIDADE DE ATIVOS
             </h1>
             <p className="mt-2 text-slate-500">
               Sistema Integrado de Gestão de Ativos e Manutenção

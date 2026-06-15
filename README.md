@@ -59,7 +59,7 @@
 <p align="center">
   <h3 align="center">Sistema de Gestão e Confiabilidade de Ativos</h3>
   <p align="center">
-    <em>Conectando pessoas, ativos e manutenção.</em>
+    <em>Sistema Integrado de Gestão de Ativos e Manutenção.</em>
   </p>
 </p>
 
