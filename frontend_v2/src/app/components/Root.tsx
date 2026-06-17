@@ -9,7 +9,8 @@ import {
   HardHat,
   ChevronRight,
 } from "lucide-react";
-import { getCurrentUser } from "../lib/ordersStore";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 
 const gestorNav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -26,14 +27,13 @@ const tecnicoNav = [
 
 export function Root() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
-  const isGestor = user.role === "gestor";
+  const { profile } = useAuth();
+  
+  const isGestor = profile?.role === "gestor";
   const navItems = isGestor ? gestorNav : tecnicoNav;
 
-  const handleLogout = () => {
-    localStorage.removeItem("fixer_authenticated");
-    localStorage.removeItem("fixer_role");
-    localStorage.removeItem("fixer_user");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/login");
   };
 
@@ -85,7 +85,7 @@ export function Root() {
 
             <div className="min-w-0">
               <p className="text-white text-sm font-medium truncate">
-                {user.name}
+                {profile?.name || "Usuário"}
               </p>
 
               <p

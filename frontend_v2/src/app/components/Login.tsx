@@ -5,45 +5,41 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Lock, User } from "lucide-react";
 
-const DEMO_ACCOUNTS = [
-  {
-    email: "gestor@fixer.com",
-    password: "gestor123",
-    name: "Carlos Mendes",
-    role: "gestor" as const,
-  },
-  {
-    email: "tecnico@fixer.com",
-    password: "tecnico123",
-    name: "João Silva",
-    role: "tecnico" as const,
-  },
-];
+import { supabase } from "../../lib/supabase";
 
 export function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("gestor@fixer.com");
-  const [password, setPassword] = useState("gestor123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const account = DEMO_ACCOUNTS.find(
-      (a) => a.email === email.trim() && a.password === password
-    );
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
 
-    if (!account) {
-      setError("E-mail ou senha inválidos.");
-      return;
+      if (error) throw error;
+
+      if (data.user) {
+        localStorage.setItem("fixer_authenticated", "true");
+        // Ajuste estas variáveis de acordo com o que você irá retornar do banco
+        localStorage.setItem("fixer_role", "gestor"); // ou buscar o role real
+        localStorage.setItem("fixer_user", data.user.email || "Usuário");
+
+        navigate("/");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro ao tentar fazer login. Verifique as credenciais.");
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem("fixer_authenticated", "true");
-    localStorage.setItem("fixer_role", account.role);
-    localStorage.setItem("fixer_user", account.name);
-
-    navigate("/");
   };
 
   return (
@@ -142,9 +138,10 @@ export function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white shadow-lg"
+                disabled={loading}
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white shadow-lg disabled:opacity-50"
               >
-                Login
+                {loading ? "Entrando..." : "Login"}
               </Button>
 
               <button

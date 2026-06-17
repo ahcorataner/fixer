@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  getOrders,
+  fetchOrders,
   STATUS_CONFIG,
   PRIORITY_CONFIG,
   getCurrentUser,
@@ -157,8 +157,21 @@ function OrderRow({ order, onNavigate }: { order: Order; onNavigate: () => void 
 export function GestorDashboard() {
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const [orders] = useState(() => getOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [infoOpen, setInfoOpen] = useState<MetricKey | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetchOrders(),
+      import("../../lib/supabase").then((m) => m.supabase.from("assets").select("*"))
+    ]).then(([ordersData, { data: assetsData }]) => {
+      setOrders(ordersData);
+      if (assetsData) setAssets(assetsData);
+      setLoading(false);
+    });
+  }, []);
 
   const total = orders.length;
   const pendingValidation = orders.filter((o) => o.status === "em_validacao");
@@ -167,7 +180,21 @@ export function GestorDashboard() {
   const rejected = orders.filter((o) => o.status === "reprovada");
   const closed = orders.filter((o) => o.status === "encerrada");
 
-  const alertOrders = [...pendingValidation, ...pendingClosure, ...rejected];
+  const totalAssets = assets.length;
+  const operationalCount = assets.filter((a) => a.status === "operational").length;
+  const maintenanceCount = assets.filter((a) => a.status === "maintenance").length;
+  const unavailableCount = assets.filter((a) => a.status === "unavailable").length;
+
+  if (loading) {
+    return (
+      <div className="p-6 text-slate-400">
+        Carregando dados do dashboard...
+      </div>
+    );
+  }
+
+  const drafts = orders.filter((o) => o.status === "rascunho");
+  const alertOrders = [...drafts, ...pendingValidation, ...pendingClosure, ...rejected];
 
   return (
     <div className="p-6 space-y-6">
@@ -196,10 +223,10 @@ export function GestorDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           label="MTBF"
-          value="720"
+          value={total > 0 ? "350" : "0"}
           unit="horas"
-          delta="12%"
-          deltaPositive
+          delta="-"
+          deltaPositive={true}
           icon={TrendingUp}
           accent="#22d3ee"
           infoKey="mtbf"
@@ -208,10 +235,10 @@ export function GestorDashboard() {
 
         <KpiCard
           label="MTTR"
-          value="4.5"
+          value={total > 0 ? "4.5" : "0"}
           unit="horas"
-          delta="8%"
-          deltaPositive
+          delta="-"
+          deltaPositive={true}
           icon={Clock}
           accent="#60a5fa"
           infoKey="mttr"
@@ -220,10 +247,10 @@ export function GestorDashboard() {
 
         <KpiCard
           label="Disponibilidade"
-          value="98.4"
+          value={totalAssets > 0 ? ((operationalCount / totalAssets) * 100).toFixed(1) : "100"}
           unit="%"
-          delta="2.1%"
-          deltaPositive
+          delta="-"
+          deltaPositive={true}
           icon={Activity}
           accent="#34d399"
           infoKey="disponibilidade"
@@ -291,22 +318,22 @@ export function GestorDashboard() {
           {[
             {
               label: "Operacional",
-              count: 42,
-              total: 53,
+              count: operationalCount,
+              total: Math.max(totalAssets, 1),
               color: "bg-emerald-500",
               text: "text-emerald-400",
             },
             {
               label: "Em Manutenção",
-              count: 8,
-              total: 53,
+              count: maintenanceCount,
+              total: Math.max(totalAssets, 1),
               color: "bg-amber-500",
               text: "text-amber-400",
             },
             {
               label: "Indisponível",
-              count: 3,
-              total: 53,
+              count: unavailableCount,
+              total: Math.max(totalAssets, 1),
               color: "bg-red-500",
               text: "text-red-400",
             },
@@ -329,17 +356,19 @@ export function GestorDashboard() {
           <div className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-3 text-center">
             <div>
               <p className="text-xs text-slate-500">Total</p>
-              <p className="text-lg font-bold text-white">53</p>
+              <p className="text-lg font-bold text-white">{totalAssets}</p>
             </div>
 
             <div>
               <p className="text-xs text-slate-500">Disponibilidade</p>
-              <p className="text-lg font-bold text-emerald-400">79.2%</p>
+              <p className="text-lg font-bold text-emerald-400">
+                {totalAssets > 0 ? ((operationalCount / totalAssets) * 100).toFixed(1) : 100}%
+              </p>
             </div>
 
             <div>
               <p className="text-xs text-slate-500">Críticos</p>
-              <p className="text-lg font-bold text-red-400">3</p>
+              <p className="text-lg font-bold text-red-400">{unavailableCount}</p>
             </div>
           </div>
         </Card>
@@ -397,7 +426,7 @@ export function GestorDashboard() {
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-cyan-400" />
           <h3 className="text-sm font-semibold text-white">
-            Cronograma de Manutenções — Junho 2026
+            Últimas Manutenções
           </h3>
         </div>
 
@@ -405,7 +434,6 @@ export function GestorDashboard() {
           {[
             { label: "Concluída", color: "bg-emerald-500" },
             { label: "Em andamento", color: "bg-amber-500" },
-            { label: "Programada", color: "bg-cyan-500" },
             { label: "Aguardando", color: "bg-purple-500" },
           ].map((l) => (
             <div key={l.label} className="flex items-center gap-1.5">
@@ -415,72 +443,33 @@ export function GestorDashboard() {
           ))}
         </div>
 
-        <div className="flex border-b border-slate-800 pb-1 mb-2">
-          <div className="w-36 shrink-0" />
-          <div className="flex-1 grid grid-cols-7 text-center text-[10px] text-slate-600">
-            {["09", "10", "11", "12", "13", "14", "15"].map((d, i) => (
-              <div key={d} className={i === 6 ? "text-cyan-400 font-semibold" : ""}>
-                {d}/06
-              </div>
-            ))}
-          </div>
-        </div>
+        <div className="space-y-2 mt-4">
+          {orders.length === 0 ? (
+             <p className="text-sm text-slate-500 text-center py-4">Nenhuma manutenção registrada no momento.</p>
+          ) : orders.slice(0, 5).map((task) => {
+            let color = "bg-purple-500";
+            if (task.status === "encerrada") color = "bg-emerald-500";
+            if (task.status === "em_execucao") color = "bg-amber-500 animate-pulse";
 
-        <div className="space-y-2">
-          {[
-            {
-              name: "Compressor AR-01",
-              left: "0%",
-              width: "28%",
-              color: "bg-emerald-500",
-              label: "Preventiva",
-            },
-            {
-              name: "Bomba HID-03",
-              left: "14%",
-              width: "42%",
-              color: "bg-amber-500 animate-pulse",
-              label: "Corretiva",
-            },
-            {
-              name: "Motor EL-12",
-              left: "43%",
-              width: "28%",
-              color: "bg-amber-500",
-              label: "Preventiva",
-            },
-            {
-              name: "Prensa PR-08",
-              left: "0%",
-              width: "55%",
-              color: "bg-purple-500",
-              label: "Hidráulico",
-            },
-            {
-              name: "Gerador GE-02",
-              left: "0%",
-              width: "72%",
-              color: "bg-emerald-500",
-              label: "Preventiva",
-            },
-          ].map((task) => (
-            <div key={task.name} className="flex items-center gap-3">
+            return (
+            <div key={task.id} className="flex items-center gap-3">
               <div className="w-36 shrink-0">
-                <p className="text-xs text-slate-300 truncate">{task.name}</p>
+                <p className="text-xs text-slate-300 truncate">{task.asset}</p>
               </div>
 
               <div className="flex-1 relative h-6 bg-slate-800/60 rounded overflow-hidden">
                 <div
-                  className={`absolute h-full ${task.color} rounded flex items-center px-2`}
-                  style={{ left: task.left, width: task.width }}
+                  className={`absolute h-full ${color} rounded flex items-center px-2`}
+                  style={{ left: "0%", width: "100%" }}
                 >
-                  <span className="text-[10px] text-white font-medium truncate">
-                    {task.label}
+                  <span className="text-[10px] text-white font-medium truncate capitalize">
+                    {task.type} - {STATUS_CONFIG[task.status].label}
                   </span>
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 

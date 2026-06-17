@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -31,8 +31,9 @@ import {
   User,
   Wrench,
 } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 import {
-  getOrders,
+  fetchOrders,
   addOrder,
   updateOrder,
   STATUS_CONFIG,
@@ -56,20 +57,6 @@ const STATUS_TABS: { key: string; label: string }[] = [
   { key: "cancelada", label: "Canceladas" },
 ];
 
-const ASSETS = [
-  "Compressor AR-01",
-  "Bomba HID-03",
-  "Motor EL-12",
-  "Esteira TR-05",
-  "Prensa PR-08",
-  "Gerador GE-02",
-  "Caldeira CA-01",
-  "Torno TC-15",
-  "Fresadora FM-04",
-  "Retífica RT-07",
-];
-
-const TECHNICIANS = ["João Silva", "Maria Santos", "Carlos Oliveira", "Ana Lima"];
 
 interface NewOrderForm {
   asset: string;
@@ -228,13 +215,12 @@ function OrderCard({
               return (
                 <div key={s} className="flex items-center gap-1">
                   <div
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
-                      current
-                        ? `${sc.bg} border ${sc.color} ring-1 ring-offset-1 ring-offset-slate-900`
-                        : passed
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${current
+                      ? `${sc.bg} border ${sc.color} ring-1 ring-offset-1 ring-offset-slate-900`
+                      : passed
                         ? "bg-slate-800 text-emerald-400/60 border border-emerald-500/20"
                         : "bg-slate-800/50 text-slate-600 border border-slate-800"
-                    }`}
+                      }`}
                     style={current ? { ringColor: sc.dot } : {}}
                   >
                     {sc.label}
@@ -291,7 +277,8 @@ function OrderCard({
 }
 
 export function GestorOrdens() {
-  const [orders, setOrders] = useState(() => getOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [showNewOrder, setShowNewOrder] = useState(false);
@@ -303,6 +290,10 @@ export function GestorOrdens() {
   }>({ order: null, action: "" });
   const [rejectReason, setRejectReason] = useState("");
   const [closureNotes, setClosureNotes] = useState("");
+  const [closureAssetStatus, setClosureAssetStatus] = useState<string>("");
+
+  const [dbAssets, setDbAssets] = useState<any[]>([]);
+  const [dbTechnicians, setDbTechnicians] = useState<any[]>([]);
 
   // New order form
   const [newForm, setNewForm] = useState<NewOrderForm>({
@@ -313,7 +304,24 @@ export function GestorOrdens() {
     responsible: "",
   });
 
-  const refreshOrders = () => setOrders(getOrders());
+  const loadOrders = async () => {
+    setLoading(true);
+    const [ordersData, assetsRes, techsRes] = await Promise.all([
+      fetchOrders(),
+      supabase.from("assets").select("name"),
+      supabase.from("profiles").select("name").eq("role", "tecnico")
+    ]);
+    setOrders(ordersData);
+    if (assetsRes.data) setDbAssets(assetsRes.data);
+    if (techsRes.data) setDbTechnicians(techsRes.data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const refreshOrders = () => loadOrders();
 
   const filtered = orders.filter((o) => {
     const matchTab = activeTab === "all" || o.status === activeTab;
@@ -325,31 +333,35 @@ export function GestorOrdens() {
     return matchTab && matchSearch;
   });
 
-  const handleAction = (order: Order, action: string) => {
+  const handleAction = async (order: Order, action: string) => {
     if (action === "approve") {
-      updateOrder(order.id, { status: "aprovada" });
+      await updateOrder(order.id, { status: "aprovada" });
       refreshOrders();
     } else if (action === "send_validation") {
-      updateOrder(order.id, { status: "em_validacao" });
+      await updateOrder(order.id, { status: "em_validacao" });
       refreshOrders();
     } else if (action === "reopen") {
-      updateOrder(order.id, { status: "rascunho", rejectionReason: undefined });
+      await updateOrder(order.id, { status: "rascunho", rejectionReason: undefined });
       refreshOrders();
     } else if (action === "reject" || action === "cancel" || action === "close") {
       setActionDialog({ order, action });
+      setClosureAssetStatus(""); // Reseta o status para não vir preenchido
     }
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     const { order, action } = actionDialog;
     if (!order) return;
 
     if (action === "reject") {
-      updateOrder(order.id, { status: "reprovada", rejectionReason: rejectReason || "Reprovada pelo gestor." });
+      await updateOrder(order.id, { status: "reprovada", rejectionReason: rejectReason || "Reprovada pelo gestor." });
     } else if (action === "cancel") {
-      updateOrder(order.id, { status: "cancelada" });
+      await updateOrder(order.id, { status: "cancelada" });
     } else if (action === "close") {
-      updateOrder(order.id, { status: "encerrada", closureNotes: closureNotes || "Encerrada pelo gestor." });
+      await updateOrder(order.id, { status: "encerrada", closureNotes: closureNotes || "Encerrada pelo gestor." });
+      if (closureAssetStatus) {
+        await supabase.from("assets").update({ status: closureAssetStatus }).eq("name", order.asset);
+      }
     }
 
     setActionDialog({ order: null, action: "" });
@@ -358,11 +370,11 @@ export function GestorOrdens() {
     refreshOrders();
   };
 
-  const handleNewOrder = (e: React.FormEvent) => {
+  const handleNewOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newForm.asset || !newForm.type || !newForm.priority || !newForm.description || !newForm.responsible) return;
 
-    addOrder({
+    await addOrder({
       asset: newForm.asset,
       type: newForm.type as MaintenanceType,
       priority: newForm.priority as Priority,
@@ -416,19 +428,17 @@ export function GestorOrdens() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                active
-                  ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active
+                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
+                }`}
             >
               <Filter className="w-3 h-3" />
               {tab.label}
               {count > 0 && (
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    active ? "bg-cyan-500/30 text-cyan-300" : "bg-slate-700 text-slate-400"
-                  }`}
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-cyan-500/30 text-cyan-300" : "bg-slate-700 text-slate-400"
+                    }`}
                 >
                   {count}
                 </span>
@@ -439,7 +449,11 @@ export function GestorOrdens() {
       </div>
 
       {/* Orders list */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Card className="p-12 bg-slate-900 border-slate-800 text-center text-slate-400">
+          Carregando ordens de manutenção...
+        </Card>
+      ) : filtered.length === 0 ? (
         <Card className="p-12 bg-slate-900 border-slate-800 text-center">
           <FileText className="w-10 h-10 text-slate-700 mx-auto mb-3" />
           <p className="text-slate-500">Nenhuma ordem encontrada</p>
@@ -490,15 +504,33 @@ export function GestorOrdens() {
             )}
 
             {actionDialog.action === "close" && (
-              <div className="space-y-2">
-                <Label className="text-slate-300 text-sm">Notas de Encerramento</Label>
-                <Textarea
-                  placeholder="Observações do encerramento (opcional)..."
-                  value={closureNotes}
-                  onChange={(e) => setClosureNotes(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 resize-none"
-                  rows={3}
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Atualizar Status do Ativo</Label>
+                  <Select
+                    value={closureAssetStatus}
+                    onValueChange={setClosureAssetStatus}
+                  >
+                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                      <SelectValue placeholder="Mantenha o status atual ou escolha um novo" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="operational" className="text-white">Operacional</SelectItem>
+                      <SelectItem value="unavailable" className="text-white">Indisponível</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Notas de Encerramento</Label>
+                  <Textarea
+                    placeholder="Observações do encerramento (opcional)..."
+                    value={closureNotes}
+                    onChange={(e) => setClosureNotes(e.target.value)}
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 resize-none"
+                    rows={3}
+                  />
+                </div>
               </div>
             )}
 
@@ -523,8 +555,8 @@ export function GestorOrdens() {
                 actionDialog.action === "close"
                   ? "bg-emerald-600 hover:bg-emerald-500 text-white"
                   : actionDialog.action === "reject"
-                  ? "bg-red-600 hover:bg-red-500 text-white"
-                  : "bg-red-700 hover:bg-red-600 text-white"
+                    ? "bg-red-600 hover:bg-red-500 text-white"
+                    : "bg-red-700 hover:bg-red-600 text-white"
               }
             >
               {actionDialog.action === "reject" && "Confirmar Reprovação"}
@@ -554,9 +586,11 @@ export function GestorOrdens() {
                   <SelectValue placeholder="Selecione o ativo" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {ASSETS.map((a) => (
-                    <SelectItem key={a} value={a} className="text-white hover:bg-slate-700">
-                      {a}
+                  {dbAssets.length === 0 ? (
+                    <SelectItem value="none" disabled className="text-slate-400">Nenhum ativo cadastrado</SelectItem>
+                  ) : dbAssets.map((a) => (
+                    <SelectItem key={a.name} value={a.name} className="text-white hover:bg-slate-700">
+                      {a.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -610,9 +644,11 @@ export function GestorOrdens() {
                   <SelectValue placeholder="Selecione o técnico" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {TECHNICIANS.map((t) => (
-                    <SelectItem key={t} value={t} className="text-white hover:bg-slate-700">
-                      {t}
+                  {dbTechnicians.length === 0 ? (
+                    <SelectItem value="none" disabled className="text-slate-400">Nenhum técnico cadastrado</SelectItem>
+                  ) : dbTechnicians.map((t) => (
+                    <SelectItem key={t.name} value={t.name} className="text-white hover:bg-slate-700">
+                      {t.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

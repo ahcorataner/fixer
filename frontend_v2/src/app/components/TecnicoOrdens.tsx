@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -28,7 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import {
-  getOrders,
+  fetchOrders,
   updateOrder,
   STATUS_CONFIG,
   PRIORITY_CONFIG,
@@ -37,6 +37,7 @@ import {
   type Order,
   type OrderStatus,
 } from "../lib/ordersStore";
+import { supabase } from "../../lib/supabase";
 
 const TABS = [
   { key: "pending", label: "Pendentes", icon: AlertCircle },
@@ -193,7 +194,8 @@ function OrderCard({
 
 export function TecnicoOrdens() {
   const user = getCurrentUser();
-  const [orders, setOrders] = useState(() => getOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
 
   // Registrar manutenção dialog
@@ -208,7 +210,18 @@ export function TecnicoOrdens() {
   const [concludeDialog, setConcludeDialog] = useState<Order | null>(null);
   const [concludeNotes, setConcludeNotes] = useState("");
 
-  const refreshOrders = () => setOrders(getOrders());
+  const loadOrders = async () => {
+    setLoading(true);
+    const data = await fetchOrders();
+    setOrders(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const refreshOrders = () => loadOrders();
 
   // Filter to orders assigned to this technician
   const myOrders = orders.filter(
@@ -223,8 +236,9 @@ export function TecnicoOrdens() {
 
   const currentOrders = tabOrders[activeTab as keyof typeof tabOrders] || [];
 
-  const handleStartExecution = (order: Order) => {
-    updateOrder(order.id, { status: "em_execucao" });
+  const handleStartExecution = async (order: Order) => {
+    await updateOrder(order.id, { status: "em_execucao" });
+    await supabase.from("assets").update({ status: "maintenance" }).eq("name", order.asset);
     refreshOrders();
     setActiveTab("executing");
   };
@@ -239,22 +253,22 @@ export function TecnicoOrdens() {
     setConcludeNotes("");
   };
 
-  const confirmRegisterMaintenance = () => {
+  const confirmRegisterMaintenance = async () => {
     if (!maintenanceDialog) return;
     const newNote = `[${new Date().toLocaleString("pt-BR")}] ${maintenanceForm.tipoIntervencao}: ${maintenanceForm.descricao}${maintenanceForm.notas ? ` — ${maintenanceForm.notas}` : ""}`;
     const existing = maintenanceDialog.executionNotes ? maintenanceDialog.executionNotes + "\n" : "";
-    updateOrder(maintenanceDialog.id, { executionNotes: existing + newNote });
+    await updateOrder(maintenanceDialog.id, { executionNotes: existing + newNote });
     setMaintenanceDialog(null);
     refreshOrders();
   };
 
-  const confirmConclude = () => {
+  const confirmConclude = async () => {
     if (!concludeDialog) return;
     const existing = concludeDialog.executionNotes ? concludeDialog.executionNotes + "\n" : "";
     const finalNote = concludeNotes
       ? existing + `[Conclusão] ${concludeNotes}`
       : existing.trim() || "Execução concluída pelo técnico.";
-    updateOrder(concludeDialog.id, {
+    await updateOrder(concludeDialog.id, {
       status: "aguardando_encerramento",
       executionNotes: finalNote,
     });
@@ -334,7 +348,11 @@ export function TecnicoOrdens() {
       </div>
 
       {/* Orders */}
-      {currentOrders.length === 0 ? (
+      {loading ? (
+        <Card className="p-12 bg-slate-900 border-slate-800 text-center text-slate-400">
+          Carregando ordens de manutenção...
+        </Card>
+      ) : currentOrders.length === 0 ? (
         <Card className="p-12 bg-slate-900 border-slate-800 text-center">
           <ClipboardList className="w-10 h-10 text-slate-700 mx-auto mb-3" />
           <p className="text-slate-500 text-sm">

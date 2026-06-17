@@ -7,6 +7,8 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Wrench, User, Mail, Lock, ArrowLeft, Briefcase } from "lucide-react";
 
+import { supabase } from "../../lib/supabase";
+
 export function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -17,17 +19,71 @@ export function Register() {
     confirmPassword: "",
     userType: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("As senhas não coincidem!");
+      setError("As senhas não coincidem!");
       return;
     }
 
-    alert(`Usuário ${formData.userType} cadastrado com sucesso!`);
-    navigate("/login");
+    if (!formData.userType) {
+      setError("Selecione um tipo de usuário!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Criar o usuário no Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Inserir na tabela profiles
+        const { error: profileError } = await supabase.from('profiles').insert([
+          {
+            id: authData.user.id,
+            name: formData.name,
+            username: formData.username,
+            role: formData.userType,
+          }
+        ]);
+
+        if (profileError) {
+          console.error("Erro ao salvar perfil:", profileError);
+          // Mesmo com erro de perfil, a conta foi criada, mas idealmente deveríamos avisar
+          setError("Conta criada, mas houve um erro ao salvar o perfil. Contate o suporte.");
+          return;
+        }
+
+        alert(`Usuário cadastrado com sucesso! Faça login.`);
+        navigate("/login");
+      }
+    } catch (err: any) {
+      console.error("Erro completo no registro:", err);
+      // Alguns erros do Supabase podem vir como objetos que viram '{}' em texto.
+      let errorMsg = "Erro ao tentar registrar.";
+      if (err?.message && err.message !== "{}") {
+        errorMsg = err.message;
+      } else if (err?.error_description) {
+        errorMsg = err.error_description;
+      } else if (err?.msg) {
+        errorMsg = err.msg;
+      }
+
+      setError(errorMsg + " (Verifique o console para mais detalhes)");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -161,11 +217,18 @@ export function Register() {
               </div>
             </div>
 
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm text-center">
+                {error}
+              </div>
+            )}
+
             <Button
               type="submit"
-              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20"
+              disabled={loading}
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-50"
             >
-              Criar Conta
+              {loading ? "Criando conta..." : "Criar Conta"}
             </Button>
           </form>
 

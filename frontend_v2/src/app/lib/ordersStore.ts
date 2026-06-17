@@ -26,146 +26,55 @@ export interface Order {
   closureNotes?: string;
 }
 
-const STORAGE_KEY = "fixer_orders";
+import { supabase } from "../../lib/supabase";
 
-const today = "15/06/2026";
-
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    asset: "Compressor AR-01",
-    type: "preventiva",
-    priority: "alta",
-    status: "em_validacao",
-    responsible: "João Silva",
-    description: "Manutenção preventiva semestral — troca de filtros e lubrificação geral do sistema.",
-    createdAt: "10/06/2026",
-    updatedAt: "11/06/2026",
-  },
-  {
-    id: 2,
-    asset: "Bomba HID-03",
-    type: "corretiva",
-    priority: "critica",
-    status: "aprovada",
-    responsible: "João Silva",
-    description: "Vazamento identificado na vedação principal. Reparo urgente necessário antes da próxima operação.",
-    createdAt: "11/06/2026",
-    updatedAt: "12/06/2026",
-  },
-  {
-    id: 3,
-    asset: "Motor EL-12",
-    type: "preventiva",
-    priority: "media",
-    status: "em_execucao",
-    responsible: "Maria Santos",
-    description: "Inspeção elétrica completa e revisão das correias de transmissão.",
-    createdAt: "12/06/2026",
-    updatedAt: "14/06/2026",
-    executionNotes: "Inspeção elétrica concluída. Correias verificadas, uma com desgaste avançado sendo substituída.",
-  },
-  {
-    id: 4,
-    asset: "Esteira TR-05",
-    type: "corretiva",
-    priority: "baixa",
-    status: "rascunho",
-    responsible: "Carlos Oliveira",
-    description: "Sensor de posição com leituras inconsistentes. Verificar fiação e substituir se necessário.",
-    createdAt: "13/06/2026",
-    updatedAt: "13/06/2026",
-  },
-  {
-    id: 5,
-    asset: "Prensa PR-08",
-    type: "preventiva",
-    priority: "alta",
-    status: "aguardando_encerramento",
-    responsible: "Maria Santos",
-    description: "Lubrificação do sistema hidráulico e verificação completa de segurança.",
-    createdAt: "08/06/2026",
-    updatedAt: today,
-    executionNotes: "Lubrificação concluída. Teste de pressão aprovado a 250 bar. Sistema operando normalmente. Aguardando liberação do gestor.",
-  },
-  {
-    id: 6,
-    asset: "Gerador GE-02",
-    type: "preventiva",
-    priority: "media",
-    status: "encerrada",
-    responsible: "Carlos Oliveira",
-    description: "Troca de óleo e filtros. Teste de carga por 2 horas.",
-    createdAt: "05/06/2026",
-    updatedAt: "10/06/2026",
-    executionNotes: "Todas as atividades concluídas com sucesso. Gerador operando normalmente.",
-    closureNotes: "Ordem encerrada pelo gestor. Ativo disponibilizado para operação.",
-  },
-  {
-    id: 7,
-    asset: "Caldeira CA-01",
-    type: "corretiva",
-    priority: "critica",
-    status: "reprovada",
-    responsible: "João Silva",
-    description: "Ruído anormal no sistema de combustão.",
-    createdAt: "14/06/2026",
-    updatedAt: today,
-    rejectionReason: "Descrição insuficiente. Necessário incluir laudo técnico e histórico do ativo. Reenviar com documentação completa.",
-  },
-  {
-    id: 8,
-    asset: "Torno TC-15",
-    type: "preditiva",
-    priority: "media",
-    status: "cancelada",
-    responsible: "Carlos Oliveira",
-    description: "Análise preditiva de vibração no eixo principal.",
-    createdAt: "03/06/2026",
-    updatedAt: "06/06/2026",
-  },
-];
-
-export function getOrders(): Order[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {
-    // ignore parse errors
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialOrders));
-  return [...initialOrders];
+export async function fetchOrders(): Promise<Order[]> {
+  const { data, error } = await supabase.from('work_orders').select('*').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  
+  // Transform db names to our frontend interfaces (e.g., camelCase for dates)
+  return data.map(d => ({
+    id: d.id,
+    asset: d.asset,
+    type: d.type,
+    priority: d.priority,
+    status: d.status,
+    responsible: d.responsible,
+    description: d.description,
+    createdAt: new Date(d.created_at).toLocaleDateString("pt-BR"),
+    updatedAt: new Date(d.updated_at).toLocaleDateString("pt-BR"),
+    executionNotes: d.execution_notes,
+    rejectionReason: d.rejection_reason,
+    closureNotes: d.closure_notes,
+  }));
 }
 
-export function resetOrders(): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialOrders));
+export async function updateOrder(id: number, patch: Partial<Order>): Promise<void> {
+  const dbPatch: any = {};
+  if (patch.asset) dbPatch.asset = patch.asset;
+  if (patch.type) dbPatch.type = patch.type;
+  if (patch.priority) dbPatch.priority = patch.priority;
+  if (patch.status) dbPatch.status = patch.status;
+  if (patch.responsible) dbPatch.responsible = patch.responsible;
+  if (patch.description) dbPatch.description = patch.description;
+  if (patch.executionNotes !== undefined) dbPatch.execution_notes = patch.executionNotes;
+  if (patch.rejectionReason !== undefined) dbPatch.rejection_reason = patch.rejectionReason;
+  if (patch.closureNotes !== undefined) dbPatch.closure_notes = patch.closureNotes;
+  
+  dbPatch.updated_at = new Date().toISOString();
+
+  await supabase.from('work_orders').update(dbPatch).eq('id', id);
 }
 
-export function saveOrders(orders: Order[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-}
-
-export function updateOrder(id: number, patch: Partial<Order>): void {
-  const orders = getOrders();
-  const idx = orders.findIndex((o) => o.id === id);
-  if (idx >= 0) {
-    orders[idx] = {
-      ...orders[idx],
-      ...patch,
-      updatedAt: new Date().toLocaleDateString("pt-BR"),
-    };
-    saveOrders(orders);
-  }
-}
-
-export function addOrder(order: Omit<Order, "id" | "createdAt" | "updatedAt">): Order {
-  const orders = getOrders();
-  const id = orders.length > 0 ? Math.max(...orders.map((o) => o.id)) + 1 : 1;
-  const dateStr = new Date().toLocaleDateString("pt-BR");
-  const newOrder: Order = { ...order, id, createdAt: dateStr, updatedAt: dateStr };
-  orders.push(newOrder);
-  saveOrders(orders);
-  return newOrder;
+export async function addOrder(order: Omit<Order, "id" | "createdAt" | "updatedAt">): Promise<void> {
+  await supabase.from('work_orders').insert([{
+    asset: order.asset,
+    type: order.type,
+    priority: order.priority,
+    status: order.status,
+    responsible: order.responsible,
+    description: order.description,
+  }]);
 }
 
 export const STATUS_CONFIG: Record<

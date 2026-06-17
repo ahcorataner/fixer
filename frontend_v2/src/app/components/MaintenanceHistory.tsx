@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Calendar, User, Wrench, Search, FileText } from "lucide-react";
-import { getOrders, STATUS_CONFIG, TYPE_CONFIG, getCurrentUser } from "../lib/ordersStore";
+import { fetchOrders, STATUS_CONFIG, TYPE_CONFIG, getCurrentUser, Order } from "../lib/ordersStore";
 
 export function MaintenanceHistory() {
   const user = getCurrentUser();
   const [search, setSearch] = useState("");
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allOrders = getOrders();
+  useEffect(() => {
+    fetchOrders().then((data) => {
+      setAllOrders(data);
+      setLoading(false);
+    });
+  }, []);
+
   const closedOrders = allOrders.filter(
     (o) =>
       (o.status === "encerrada" || o.status === "cancelada") &&
@@ -23,6 +31,10 @@ export function MaintenanceHistory() {
       o.responsible.toLowerCase().includes(search.toLowerCase()) ||
       TYPE_CONFIG[o.type].label.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return <div className="p-6 text-slate-400">Carregando histórico...</div>;
+  }
 
   return (
     <div className="p-6 space-y-5">

@@ -9,14 +9,22 @@ import { Login } from "./components/Login";
 import { ForgotPassword } from "./components/ForgotPassword";
 import { Register } from "./components/Register";
 
+import { useAuth } from "./hooks/useAuth";
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = localStorage.getItem("fixer_authenticated") === "true";
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Carregando...</div>;
+  
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function GestorRoute({ children }: { children: React.ReactNode }) {
-  const role = localStorage.getItem("fixer_role");
-  return role === "gestor" ? <>{children}</> : <Navigate to="/work-orders" replace />;
+  const { profile, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Carregando...</div>;
+
+  return profile?.role === "gestor" ? <>{children}</> : <Navigate to="/work-orders" replace />;
 }
 
 export const router = createBrowserRouter([
@@ -42,6 +50,14 @@ export const router = createBrowserRouter([
       },
       {
         path: "assets/new",
+        element: (
+          <GestorRoute>
+            <AssetForm />
+          </GestorRoute>
+        ),
+      },
+      {
+        path: "assets/:id/edit",
         element: (
           <GestorRoute>
             <AssetForm />
