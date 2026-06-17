@@ -28,7 +28,7 @@ const tecnicoNav = [
 export function Root() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  
+
   const isGestor = profile?.role === "gestor";
   const navItems = isGestor ? gestorNav : tecnicoNav;
 
@@ -70,11 +70,10 @@ export function Root() {
         <div className="px-4 py-3 mx-3 mt-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-lg ${
-                isGestor
-                  ? "bg-cyan-500/20 border border-cyan-500/30"
-                  : "bg-amber-500/20 border border-amber-500/30"
-              }`}
+              className={`p-2 rounded-lg ${isGestor
+                ? "bg-cyan-500/20 border border-cyan-500/30"
+                : "bg-amber-500/20 border border-amber-500/30"
+                }`}
             >
               {isGestor ? (
                 <ShieldCheck className="w-4 h-4 text-cyan-400" />
@@ -89,11 +88,10 @@ export function Root() {
               </p>
 
               <p
-                className={`text-xs ${
-                  isGestor
-                    ? "text-cyan-400"
-                    : "text-amber-400"
-                }`}
+                className={`text-xs ${isGestor
+                  ? "text-cyan-400"
+                  : "text-amber-400"
+                  }`}
               >
                 {isGestor ? "Gestor" : "Técnico"}
               </p>
@@ -116,12 +114,11 @@ export function Root() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group ${
-                  isActive
-                    ? isGestor
-                      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/25"
-                      : "bg-amber-500/15 text-amber-400 border border-amber-500/25"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent"
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group ${isActive
+                  ? isGestor
+                    ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/25"
+                    : "bg-amber-500/15 text-amber-400 border border-amber-500/25"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent"
                 }`
               }
             >

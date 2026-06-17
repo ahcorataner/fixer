@@ -16,6 +16,7 @@ import {
   BarChart3,
   HelpCircle,
   X,
+  Info,
 } from "lucide-react";
 import {
   fetchOrders,
@@ -106,9 +107,8 @@ function KpiCard({
 
           <div className="flex items-center gap-1 mt-2">
             <span
-              className={`text-xs font-medium ${
-                deltaPositive ? "text-emerald-400" : "text-red-400"
-              }`}
+              className={`text-xs font-medium ${deltaPositive ? "text-emerald-400" : "text-red-400"
+                }`}
             >
               {deltaPositive ? "▲" : "▼"} {delta}
             </span>
@@ -161,8 +161,11 @@ export function GestorDashboard() {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [infoOpen, setInfoOpen] = useState<MetricKey | null>(null);
+  const [notification, setNotification] = useState<{ visible: boolean; message: string } | null>(null);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     Promise.all([
       fetchOrders(),
       import("../../lib/supabase").then((m) => m.supabase.from("assets").select("*"))
@@ -170,8 +173,33 @@ export function GestorDashboard() {
       setOrders(ordersData);
       if (assetsData) setAssets(assetsData);
       setLoading(false);
+
+      timeoutId = setTimeout(() => {
+        if (user.role === "gestor") {
+          const emExecucao = ordersData.filter((o) => o.status === "em_execucao").length;
+          if (emExecucao > 0) {
+            setNotification({ visible: true, message: `Você possui ${emExecucao} ordem(ns) em execução no momento.` });
+          }
+        } else {
+          const novas = ordersData.filter((o) => o.responsible === user.name && o.status === "aprovada").length;
+          if (novas > 0) {
+            setNotification({ visible: true, message: `Você possui ${novas} nova(s) ordem(ns) para iniciar.` });
+          }
+        }
+      }, 3000);
     });
-  }, []);
+
+    return () => clearTimeout(timeoutId);
+  }, [user.name, user.role]);
+
+  useEffect(() => {
+    if (notification?.visible) {
+      const timer = setTimeout(() => {
+        setNotification((prev) => (prev ? { ...prev, visible: false } : null));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification?.visible]);
 
   const total = orders.length;
   const pendingValidation = orders.filter((o) => o.status === "em_validacao");
@@ -445,29 +473,29 @@ export function GestorDashboard() {
 
         <div className="space-y-2 mt-4">
           {orders.length === 0 ? (
-             <p className="text-sm text-slate-500 text-center py-4">Nenhuma manutenção registrada no momento.</p>
-          ) : orders.slice(0, 5).map((task) => {
+            <p className="text-sm text-slate-500 text-center py-4">Nenhuma manutenção registrada no momento.</p>
+          ) : orders.slice(0, 5).map((task, index) => {
             let color = "bg-purple-500";
             if (task.status === "encerrada") color = "bg-emerald-500";
             if (task.status === "em_execucao") color = "bg-amber-500 animate-pulse";
 
             return (
-            <div key={task.id} className="flex items-center gap-3">
-              <div className="w-36 shrink-0">
-                <p className="text-xs text-slate-300 truncate">{task.asset}</p>
-              </div>
+              <div key={task.id} className="flex items-center gap-3">
+                <div className="w-36 shrink-0">
+                  <p className="text-xs text-slate-300 truncate">{task.asset}</p>
+                </div>
 
-              <div className="flex-1 relative h-6 bg-slate-800/60 rounded overflow-hidden">
-                <div
-                  className={`absolute h-full ${color} rounded flex items-center px-2`}
-                  style={{ left: "0%", width: "100%" }}
-                >
-                  <span className="text-[10px] text-white font-medium truncate capitalize">
-                    {task.type} - {STATUS_CONFIG[task.status].label}
-                  </span>
+                <div className="flex-1 relative h-4 bg-slate-800/60 rounded overflow-hidden">
+                  <div
+                    className={`absolute h-full ${color} rounded flex items-center justify-center px-2 shadow-sm`}
+                    style={{ left: `${index * 10}%`, width: "50%" }}
+                  >
+                    <span className="text-[10px] text-white font-medium truncate capitalize drop-shadow-md">
+                      {task.type} - {STATUS_CONFIG[task.status].label}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
             );
           })}
         </div>
@@ -517,6 +545,18 @@ export function GestorDashboard() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {notification?.visible && (
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-5 fade-in duration-500 bg-slate-900 border border-cyan-500/50 text-white px-5 py-4 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.15)] flex items-center gap-3">
+          <div className="p-2 bg-cyan-500/20 rounded-full">
+            <Info className="w-5 h-5 text-cyan-400" />
+          </div>
+          <p className="text-sm font-medium">{notification.message}</p>
+          <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white ml-2 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>

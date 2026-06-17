@@ -167,15 +167,25 @@ export function AssetForm() {
 
           <div className="space-y-2">
             <Label htmlFor="status" className="text-slate-300">Status</Label>
-            <Select required value={status} onValueChange={setStatus}>
-              <SelectTrigger id="status" className="bg-slate-800 border-slate-700 text-white">
-                <SelectValue placeholder="Selecione o status" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="operational" className="text-white hover:bg-slate-700">Operacional</SelectItem>
-                <SelectItem value="unavailable" className="text-white hover:bg-slate-700">Indisponível</SelectItem>
-              </SelectContent>
-            </Select>
+            {status === "maintenance" ? (
+              <div className="flex h-9 w-full items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-400 opacity-50 cursor-not-allowed">
+                Em Manutenção
+              </div>
+            ) : (
+              <Select required value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status" className="bg-slate-800 border-slate-700 text-white">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="operational" className="text-white hover:bg-slate-700">Operacional</SelectItem>
+                  <SelectItem value="unavailable" className="text-white hover:bg-slate-700">Indisponível</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            
+            {status === "maintenance" && (
+              <p className="text-xs text-amber-500 mt-1">Status bloqueado: este ativo encontra-se em manutenção ativa.</p>
+            )}
           </div>
 
           {error && (
