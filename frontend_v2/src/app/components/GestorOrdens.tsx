@@ -221,7 +221,6 @@ function OrderCard({
                         ? "bg-slate-800 text-emerald-400/60 border border-emerald-500/20"
                         : "bg-slate-800/50 text-slate-600 border border-slate-800"
                       }`}
-                    style={current ? { ringColor: sc.dot } : {}}
                   >
                     {sc.label}
                   </div>
@@ -308,7 +307,7 @@ export function GestorOrdens() {
     setLoading(true);
     const [ordersData, assetsRes, techsRes] = await Promise.all([
       fetchOrders(),
-      supabase.from("assets").select("name"),
+      supabase.from("assets").select("name, status"),
       supabase.from("profiles").select("name").eq("role", "tecnico")
     ]);
     setOrders(ordersData);
@@ -589,8 +588,25 @@ export function GestorOrdens() {
                   {dbAssets.length === 0 ? (
                     <SelectItem value="none" disabled className="text-slate-400">Nenhum ativo cadastrado</SelectItem>
                   ) : dbAssets.map((a) => (
-                    <SelectItem key={a.name} value={a.name} className="text-white hover:bg-slate-700">
-                      {a.name}
+                    <SelectItem key={a.name} value={a.name} textValue={a.name} className="text-white hover:bg-slate-700">
+                      <div className="flex items-center gap-2">
+                        <span>{a.name}</span>
+                        <div
+                          className={`w-2 h-2 rounded-full shrink-0 ${a.status === "operational"
+                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                              : a.status === "unavailable"
+                                ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                                : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                            }`}
+                          title={
+                            a.status === "operational"
+                              ? "Operacional"
+                              : a.status === "unavailable"
+                                ? "Indisponível"
+                                : "Em Manutenção"
+                          }
+                        />
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

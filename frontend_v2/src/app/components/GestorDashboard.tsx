@@ -164,7 +164,7 @@ export function GestorDashboard() {
   const [notification, setNotification] = useState<{ visible: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     Promise.all([
       fetchOrders(),
