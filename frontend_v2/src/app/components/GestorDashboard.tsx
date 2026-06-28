@@ -471,7 +471,7 @@ export function GestorDashboard() {
           ))}
         </div>
 
-        <div className="space-y-2 mt-4">
+        <div className="space-y-3 mt-4">
           {orders.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-4">Nenhuma manutenção registrada no momento.</p>
           ) : orders.slice(0, 5).map((task, index) => {
@@ -480,17 +480,21 @@ export function GestorDashboard() {
             if (task.status === "em_execucao") color = "bg-amber-500 animate-pulse";
 
             return (
-              <div key={task.id} className="flex items-center gap-3">
-                <div className="w-36 shrink-0">
-                  <p className="text-xs text-slate-300 truncate">{task.asset}</p>
+              <div key={task.id} className="space-y-1.5 p-2 rounded-lg hover:bg-slate-800/20 transition-colors">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-slate-300">{task.asset}</p>
+                  <span className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-cyan-400" />
+                    {task.createdAt}
+                  </span>
                 </div>
 
-                <div className="flex-1 relative h-4 bg-slate-800/60 rounded overflow-hidden">
+                <div className="relative h-4 bg-slate-800/60 rounded-full overflow-hidden border border-slate-800/40">
                   <div
-                    className={`absolute h-full ${color} rounded flex items-center justify-center px-2 shadow-sm`}
+                    className={`absolute h-full ${color} rounded-full flex items-center justify-center px-3 shadow-sm`}
                     style={{ left: `${index * 10}%`, width: "50%" }}
                   >
-                    <span className="text-[10px] text-white font-medium truncate capitalize drop-shadow-md">
+                    <span className="text-[10px] text-white font-semibold truncate capitalize drop-shadow-md">
                       {task.type} - {STATUS_CONFIG[task.status].label}
                     </span>
                   </div>
