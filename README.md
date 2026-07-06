@@ -515,23 +515,6 @@ Quanto maior a disponibilidade, maior a capacidade operacional do ativo.
 
 ## 17. Diagramas do Projeto
 
-Os diagramas foram utilizados para representar a estrutura, o comportamento e os fluxos principais do sistema FIXER. Eles auxiliam na compreensão da arquitetura da solução, das entidades envolvidas, dos estados das ordens de manutenção e das interações entre usuários e sistema.
-
-Os arquivos podem ser organizados na pasta:
-
-```text
-imagens/diagramas/
-```
-
-Sim — o arquivo que você mandou ainda estava com caminhos antigos, tipo `imagens/diagramas/...` e `imagens/prints/...`. Corrigi para o caminho real da sua pasta: `frontend_v2/public/telas/...`. 
-
-Copie este bloco completo:
-
-````markdown
----
-
-## 17. Diagramas do Projeto
-
 Os diagramas foram utilizados para representar a estrutura, o comportamento e os fluxos principais do sistema **FIXER**. Eles auxiliam na compreensão da arquitetura da solução, das entidades envolvidas, dos estados das ordens de manutenção, dos fluxos operacionais e das interações entre usuários e sistema.
 
 Os arquivos dos diagramas estão organizados na pasta:
