@@ -2150,7 +2150,7 @@ Do ponto de vista acadêmico, o sistema representa a transformação de uma nece
 
 ## 37. Licença
 
-Este projeto possui finalidade acadêmica e foi desenvolvido no contexto das disciplinas de **Projeto e Desenvolvimento de Software** e **Banco de Dados**, do curso de **Engenharia da Computação** da **Universidade Federal do Maranhão (UFMA)**.
+Este projeto possui finalidade acadêmica e foi desenvolvido no contexto da disciplina de **Projeto e Desenvolvimento de Software,** do curso de **Engenharia da Computação** da **Universidade Federal do Maranhão (UFMA)**.
 
 O código-fonte, a documentação, as telas e os materiais disponibilizados neste repositório destinam-se a fins educacionais, de estudo, pesquisa e apresentação acadêmica.
 
