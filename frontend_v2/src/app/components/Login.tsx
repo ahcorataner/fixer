@@ -1,173 +1,260 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Lock, User } from "lucide-react";
-
+import { Link, useNavigate } from "react-router";
+import {
+  Mail,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+  Wrench,
+  CheckCircle2,
+} from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 export function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const [email, setEmail] = useState("gestor@fixer.com");
+  const [password, setPassword] = useState("123456");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage("");
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) throw error;
+    setLoading(false);
 
-      if (data.user) {
-        localStorage.setItem("fixer_authenticated", "true");
-        // Ajuste estas variáveis de acordo com o que você irá retornar do banco
-        localStorage.setItem("fixer_role", "gestor"); // ou buscar o role real
-        localStorage.setItem("fixer_user", data.user.email || "Usuário");
-
-        navigate("/");
-      }
-    } catch (err: any) {
-      setError(err.message || "Erro ao tentar fazer login. Verifique as credenciais.");
-    } finally {
-      setLoading(false);
+    if (error) {
+      setErrorMessage("E-mail ou senha inválidos. Verifique seus dados.");
+      return;
     }
+
+    navigate("/");
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-      <div className="w-full max-w-6xl min-h-[650px] bg-white rounded-[2rem] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-        <div className="relative hidden lg:flex items-center justify-center bg-white p-12">
-          <div className="absolute left-0 top-0 h-full w-full overflow-hidden">
-            <div className="absolute -left-40 top-10 h-[700px] w-[700px] rounded-full border border-cyan-200/70" />
-            <div className="absolute -left-52 top-24 h-[700px] w-[700px] rounded-full border border-blue-200/70" />
-            <div className="absolute -left-64 top-38 h-[700px] w-[700px] rounded-full border border-cyan-300/60" />
-          </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#020617] px-6 py-8 text-white">
+      {/* FUNDO DECORATIVO */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-40 top-10 h-96 w-96 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute right-0 top-0 h-[520px] w-[520px] rounded-full bg-blue-700/25 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 h-[420px] w-[420px] rounded-full bg-teal-400/10 blur-3xl" />
+      </div>
 
-          <div className="relative text-center">
-            <img
-              src="/fixer.png"
-              alt="Logo Fixador"
-              className="mx-auto max-w-[420px] object-contain drop-shadow-2xl"
-            />
-            <h1 className="mt-8 text-3xl font-bold text-slate-800 tracking-widest">
-              GESTÃO E CONFIABILIDADE DE ATIVOS
-            </h1>
-            <p className="mt-2 text-slate-500">
-              Sistema Integrado de Gestão de Ativos e Manutenção
-            </p>
-          </div>
-        </div>
+      <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center justify-center">
+        <div className="grid w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] shadow-2xl shadow-black/40 backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr]">
+          {/* LADO ESQUERDO */}
+          <section className="relative hidden min-h-[680px] overflow-hidden bg-white px-14 py-12 text-slate-900 lg:flex lg:flex-col lg:justify-between">
+            <div className="absolute -left-24 -top-24 h-[520px] w-[520px] rounded-full border border-cyan-300/50" />
+            <div className="absolute -left-8 top-20 h-[480px] w-[480px] rounded-full border border-blue-200" />
+            <div className="absolute -bottom-36 right-0 h-[420px] w-[420px] rounded-full border border-cyan-300/60" />
 
-        <div className="relative bg-gradient-to-br from-blue-950 via-blue-900 to-cyan-800 flex items-center justify-center p-8 lg:p-14">
-          <div className="absolute right-0 bottom-0 opacity-10 text-[260px] font-black text-white leading-none">
-            FIX
-          </div>
+            <div className="relative z-10">
+              <div className="mb-16 inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50 px-4 py-2 text-sm font-bold text-cyan-700">
+                <Sparkles className="h-4 w-4" />
+                Sistema inteligente de manutenção
+              </div>
 
-          <div className="relative w-full max-w-md">
-            <div className="lg:hidden text-center mb-8">
-              <img
-                src="/fixer.png"
-                alt="Logo Fixador"
-                className="mx-auto max-w-[180px] object-contain"
-              />
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-10 flex h-44 w-96 items-center justify-center">
+                  <img
+                    src="/fixer.png"
+                    alt="Fixer"
+                    className="max-h-full max-w-full object-contain drop-shadow-2xl"
+                  />
+                </div>
+
+                <h1 className="max-w-xl text-4xl font-black uppercase tracking-[0.18em] text-[#071a2c]">
+                  Gestão e Confiabilidade de Ativos
+                </h1>
+
+                <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-500">
+                  Sistema Integrado de Gestão de Ativos, Ordens de Manutenção,
+                  Histórico Operacional e Indicadores Executivos.
+                </p>
+              </div>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-8 space-y-5"
-            >
-              <div className="text-center mb-2">
-                <h2 className="text-xl font-bold text-slate-800">
-                  Acesso ao Sistema
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Informe suas credenciais para acessar a aplicação
+            <div className="relative z-10 grid grid-cols-3 gap-4">
+              <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
+                <Wrench className="mb-3 h-6 w-6 text-cyan-600" />
+                <p className="text-sm font-extrabold text-slate-800">
+                  Manutenção
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Controle das ordens
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700">
-                  E-mail
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Digite seu e-mail"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-slate-50 border-slate-300 text-slate-800"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700">
-                  Senha
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Digite sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 bg-slate-50 border-slate-300 text-slate-800"
-                    required
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <p className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded-lg py-2">
-                  {error}
+              <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
+                <ShieldCheck className="mb-3 h-6 w-6 text-blue-700" />
+                <p className="text-sm font-extrabold text-slate-800">
+                  Segurança
                 </p>
-              )}
+                <p className="mt-1 text-xs text-slate-500">
+                  Acesso autenticado
+                </p>
+              </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white shadow-lg disabled:opacity-50"
-              >
-                {loading ? "Entrando..." : "Login"}
-              </Button>
+              <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
+                <CheckCircle2 className="mb-3 h-6 w-6 text-emerald-600" />
+                <p className="text-sm font-extrabold text-slate-800">
+                  Indicadores
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Visão executiva
+                </p>
+              </div>
+            </div>
+          </section>
 
-              <button
-                type="button"
-                onClick={() => navigate("/forgot-password")}
-                className="block mx-auto text-xs text-blue-700 hover:text-blue-900"
-              >
-                Esqueceu sua senha?
-              </button>
-            </form>
-
-            <div className="text-center mt-6 text-sm text-white/80">
-              Não tem uma conta?{" "}
-              <button
-                type="button"
-                onClick={() => navigate("/register")}
-                className="font-bold text-cyan-200 hover:text-white"
-              >
-                Registrar-se
-              </button>
+          {/* LADO DIREITO */}
+          <section className="relative flex min-h-[680px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#10245f] via-[#134a87] to-[#08798a] px-6 py-12">
+            <div className="absolute bottom-[-70px] right-[-20px] select-none text-[15rem] font-black leading-none text-white/5">
+              FIX
             </div>
 
-            <p className="text-center mt-6 text-xs text-white/50">
-              © 2026 FIXADOR. Todos os direitos reservados.
-            </p>
-          </div>
+            <div className="absolute right-8 top-8 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-cyan-50 backdrop-blur-md">
+              FIXER
+            </div>
+
+            <div className="relative z-10 w-full max-w-md">
+              <div className="mb-8 text-center lg:hidden">
+                <img
+                  src="/fixer.png"
+                  alt="Fixer"
+                  className="mx-auto mb-5 h-24 object-contain"
+                />
+                <h1 className="text-2xl font-black uppercase tracking-[0.18em]">
+                  Gestão de Ativos
+                </h1>
+              </div>
+
+              <div className="rounded-[2rem] border border-white/20 bg-white/90 p-8 text-slate-900 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
+                <div className="mb-8 text-center">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#082f4d] to-[#12b7c4] text-white shadow-lg shadow-cyan-900/30">
+                    <ShieldCheck className="h-7 w-7" />
+                  </div>
+
+                  <h2 className="text-2xl font-black text-slate-900">
+                    Acesso ao Sistema
+                  </h2>
+
+                  <p className="mt-2 text-sm text-slate-500">
+                    Informe suas credenciais para acessar o painel.
+                  </p>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                      E-mail
+                    </label>
+
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="gestor@fixer.com"
+                        className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-sm font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                      Senha
+                    </label>
+
+                    <div className="relative">
+                      <LockKeyhole className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Digite sua senha"
+                        className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-12 text-sm font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10"
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((current) => !current)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {errorMessage && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#082f4d] via-[#0b6680] to-[#12b7c4] px-5 py-4 text-sm font-black text-white shadow-xl shadow-cyan-950/20 transition-all hover:scale-[1.01] hover:shadow-cyan-900/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      <>
+                        Entrar no sistema
+                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-6 flex items-center justify-between text-sm">
+                  <Link
+                    to="/forgot-password"
+                    className="font-bold text-cyan-700 transition-colors hover:text-cyan-900"
+                  >
+                    Esqueceu sua senha?
+                  </Link>
+
+                  <Link
+                    to="/register"
+                    className="font-bold text-slate-500 transition-colors hover:text-slate-900"
+                  >
+                    Criar conta
+                  </Link>
+                </div>
+              </div>
+
+              <p className="mt-8 text-center text-xs text-cyan-50/80">
+                © 2026 FIXER. Sistema Integrado de Gestão de Ativos e
+                Manutenção.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </div>
