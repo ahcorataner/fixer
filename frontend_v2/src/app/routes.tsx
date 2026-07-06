@@ -1,4 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
+import type { ReactNode } from "react";
+
 import { Root } from "./components/Root";
 import { Dashboard } from "./components/Dashboard";
 import { AssetsList } from "./components/AssetsList";
@@ -10,18 +12,33 @@ import { ForgotPassword } from "./components/ForgotPassword";
 import { Register } from "./components/Register";
 import { Reports } from "./components/Reports";
 import { SettingsPage } from "./components/SettingsPage";
+import { GestorAtribuicoes } from "./components/GestorAtribuicoes";
 
 import { useAuth } from "./hooks/useAuth";
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
       Carregando...
     </div>
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function normalizeText(value?: string | null) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function isGestorRole(role?: string | null) {
+  const normalizedRole = normalizeText(role);
+
+  return normalizedRole === "gestor" || normalizedRole.includes("gestor");
+}
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) return <LoadingScreen />;
@@ -29,12 +46,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-function GestorRoute({ children }: { children: React.ReactNode }) {
+function GestorRoute({ children }: { children: ReactNode }) {
   const { profile, loading } = useAuth();
 
   if (loading) return <LoadingScreen />;
 
-  return profile?.role === "gestor" ? (
+  return isGestorRole(profile?.role) ? (
     <>{children}</>
   ) : (
     <Navigate to="/work-orders" replace />
@@ -95,12 +112,24 @@ export const router = createBrowserRouter([
         Component: WorkOrder,
       },
       {
+        path: "assignments",
+        element: (
+          <GestorRoute>
+            <GestorAtribuicoes />
+          </GestorRoute>
+        ),
+      },
+      {
         path: "history",
         Component: MaintenanceHistory,
       },
       {
         path: "reports",
-        Component: Reports,
+        element: (
+          <GestorRoute>
+            <Reports />
+          </GestorRoute>
+        ),
       },
       {
         path: "settings",

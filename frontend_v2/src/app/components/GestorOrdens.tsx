@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
+import type { ElementType } from "react";
+import { useSearchParams } from "react-router";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +38,11 @@ import {
   Calendar,
   User,
   Wrench,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  X,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import {
@@ -57,7 +70,6 @@ const STATUS_TABS: { key: string; label: string }[] = [
   { key: "cancelada", label: "Canceladas" },
 ];
 
-
 interface NewOrderForm {
   asset: string;
   type: MaintenanceType | "";
@@ -68,9 +80,12 @@ interface NewOrderForm {
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   const sc = STATUS_CONFIG[status];
+
   return (
-    <Badge className={`${sc.bg} border ${sc.color} text-xs`}>
-      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 inline-block ${sc.dot}`} />
+    <Badge
+      className={`${sc.bg} border ${sc.color} rounded-full px-3 py-1 text-xs font-bold`}
+    >
+      <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${sc.dot}`} />
       {sc.label}
     </Badge>
   );
@@ -78,8 +93,72 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 
 function PriorityBadge({ priority }: { priority: Priority }) {
   const pc = PRIORITY_CONFIG[priority];
+
   return (
-    <Badge className={`${pc.bg} border ${pc.color} text-xs`}>{pc.label}</Badge>
+    <Badge
+      className={`${pc.bg} border ${pc.color} rounded-full px-3 py-1 text-xs font-bold`}
+    >
+      {pc.label}
+    </Badge>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  icon: ElementType;
+  tone: "cyan" | "amber" | "emerald" | "red";
+}) {
+  const tones = {
+    cyan: {
+      bg: "bg-cyan-500/10",
+      text: "text-cyan-400",
+      border: "border-cyan-500/20",
+    },
+    amber: {
+      bg: "bg-amber-500/10",
+      text: "text-amber-400",
+      border: "border-amber-500/20",
+    },
+    emerald: {
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-400",
+      border: "border-emerald-500/20",
+    },
+    red: {
+      bg: "bg-red-500/10",
+      text: "text-red-400",
+      border: "border-red-500/20",
+    },
+  };
+
+  const current = tones[tone];
+
+  return (
+    <Card className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-lg shadow-black/10 [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:shadow-slate-200/70">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            {label}
+          </p>
+
+          <p className={`mt-2 text-3xl font-black ${current.text}`}>
+            {value}
+          </p>
+        </div>
+
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${current.border} ${current.bg}`}
+        >
+          <Icon className={`h-5 w-5 ${current.text}`} />
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -92,183 +171,280 @@ function OrderCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const gestorActions: Record<OrderStatus, { label: string; action: string; icon: React.ElementType; cls: string }[]> = {
+  const gestorActions: Record<
+    OrderStatus,
+    { label: string; action: string; icon: ElementType; cls: string }[]
+  > = {
     rascunho: [
-      { label: "Enviar para Validação", action: "send_validation", icon: Send, cls: "bg-blue-600 hover:bg-blue-500 text-white" },
-      { label: "Cancelar Ordem", action: "cancel", icon: FlagOff, cls: "bg-slate-700 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-600" },
+      {
+        label: "Enviar para Validação",
+        action: "send_validation",
+        icon: Send,
+        cls: "bg-blue-600 hover:bg-blue-500 text-white",
+      },
+      {
+        label: "Cancelar Ordem",
+        action: "cancel",
+        icon: FlagOff,
+        cls: "bg-slate-800 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-700",
+      },
     ],
     em_validacao: [
-      { label: "Aprovar", action: "approve", icon: CheckCircle, cls: "bg-green-600 hover:bg-green-500 text-white" },
-      { label: "Reprovar", action: "reject", icon: XCircle, cls: "bg-red-600 hover:bg-red-500 text-white" },
+      {
+        label: "Aprovar",
+        action: "approve",
+        icon: CheckCircle,
+        cls: "bg-emerald-600 hover:bg-emerald-500 text-white",
+      },
+      {
+        label: "Reprovar",
+        action: "reject",
+        icon: XCircle,
+        cls: "bg-red-600 hover:bg-red-500 text-white",
+      },
     ],
     reprovada: [
-      { label: "Corrigir e Reenviar", action: "reopen", icon: RotateCcw, cls: "bg-blue-600 hover:bg-blue-500 text-white" },
-      { label: "Cancelar", action: "cancel", icon: FlagOff, cls: "bg-slate-700 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-600" },
+      {
+        label: "Corrigir e Reenviar",
+        action: "reopen",
+        icon: RotateCcw,
+        cls: "bg-blue-600 hover:bg-blue-500 text-white",
+      },
+      {
+        label: "Cancelar",
+        action: "cancel",
+        icon: FlagOff,
+        cls: "bg-slate-800 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-700",
+      },
     ],
     aprovada: [
-      { label: "Cancelar", action: "cancel", icon: FlagOff, cls: "bg-slate-700 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-600" },
+      {
+        label: "Cancelar",
+        action: "cancel",
+        icon: FlagOff,
+        cls: "bg-slate-800 hover:bg-red-600/80 text-slate-300 hover:text-white border border-slate-700",
+      },
     ],
     em_execucao: [],
     aguardando_encerramento: [
-      { label: "Encerrar Ordem", action: "close", icon: Lock, cls: "bg-emerald-600 hover:bg-emerald-500 text-white" },
+      {
+        label: "Encerrar Ordem",
+        action: "close",
+        icon: Lock,
+        cls: "bg-emerald-600 hover:bg-emerald-500 text-white",
+      },
     ],
     encerrada: [],
     cancelada: [],
   };
 
   const actions = gestorActions[order.status] || [];
+  const statusConfig = STATUS_CONFIG[order.status];
+  const typeLabel = TYPE_CONFIG[order.type]?.label || order.type;
 
   return (
-    <Card className="bg-slate-900 border-slate-800 overflow-hidden transition-shadow hover:border-slate-700">
-      {/* Header row */}
-      <div className="flex items-center gap-3 px-5 py-4">
-        <div className={`w-1 self-stretch rounded-full ${STATUS_CONFIG[order.status].dot}`} />
+    <Card className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-lg shadow-black/10 transition-all hover:-translate-y-0.5 hover:border-cyan-500/30 hover:shadow-cyan-950/20 [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:shadow-slate-200/70">
+      <div className="flex items-center gap-4 px-5 py-5">
+        <div
+          className={`h-16 w-1.5 shrink-0 rounded-full ${statusConfig.dot}`}
+        />
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 flex-wrap">
-            <div>
-              <span className="text-xs text-slate-600 font-mono mr-2">#{order.id.toString().padStart(4, "0")}</span>
-              <span className="text-sm font-semibold text-white">{order.asset}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs font-bold text-slate-500">
+                  #{order.id.toString().padStart(4, "0")}
+                </span>
+
+                <h3 className="truncate text-base font-black text-white [.light_&]:text-slate-900">
+                  {order.asset}
+                </h3>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <Wrench className="h-3.5 w-3.5 text-cyan-400" />
+                  {typeLabel}
+                </span>
+
+                <span className="flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-cyan-400" />
+                  {order.responsible}
+                </span>
+
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-cyan-400" />
+                  {order.createdAt}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+
+            <div className="flex flex-wrap items-center gap-2">
               <PriorityBadge priority={order.priority} />
               <StatusBadge status={order.status} />
             </div>
           </div>
-          <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
-            <span className="flex items-center gap-1">
-              <Wrench className="w-3 h-3" />
-              {TYPE_CONFIG[order.type].label}
-            </span>
-            <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {order.responsible}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {order.createdAt}
-            </span>
-          </div>
         </div>
 
         <button
-          onClick={() => setExpanded((x) => !x)}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-all"
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-slate-500 transition-all hover:bg-slate-800 hover:text-cyan-400 [.light_&]:hover:bg-slate-100"
         >
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {expanded ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
         </button>
       </div>
 
-      {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-slate-800 px-5 py-4 space-y-4">
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Descrição</p>
-            <p className="text-sm text-slate-300">{order.description}</p>
-          </div>
+        <div className="border-t border-slate-800 bg-slate-950/40 px-5 py-5 [.light_&]:border-slate-200 [.light_&]:bg-slate-50">
+          <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 [.light_&]:border-slate-200 [.light_&]:bg-white">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Descrição
+                </p>
 
-          {order.rejectionReason && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-              <p className="text-xs text-red-400 font-semibold mb-1 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" /> Motivo da Reprovação
-              </p>
-              <p className="text-xs text-red-300">{order.rejectionReason}</p>
+                <p className="text-sm leading-relaxed text-slate-300 [.light_&]:text-slate-600">
+                  {order.description}
+                </p>
+              </div>
+
+              {order.rejectionReason && (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-xs font-bold text-red-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    Motivo da Reprovação
+                  </p>
+
+                  <p className="text-sm text-red-300">
+                    {order.rejectionReason}
+                  </p>
+                </div>
+              )}
+
+              {order.executionNotes && (
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-xs font-bold text-amber-400">
+                    <FileText className="h-4 w-4" />
+                    Registro de Execução
+                  </p>
+
+                  <p className="text-sm text-amber-300">
+                    {order.executionNotes}
+                  </p>
+                </div>
+              )}
+
+              {order.closureNotes && (
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-xs font-bold text-emerald-400">
+                    <CheckCircle className="h-4 w-4" />
+                    Notas de Encerramento
+                  </p>
+
+                  <p className="text-sm text-emerald-300">
+                    {order.closureNotes}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          {order.executionNotes && (
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs text-amber-400 font-semibold mb-1 flex items-center gap-1">
-                <FileText className="w-3 h-3" /> Registro de Execução
-              </p>
-              <p className="text-xs text-amber-300">{order.executionNotes}</p>
-            </div>
-          )}
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 [.light_&]:border-slate-200 [.light_&]:bg-white">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Fluxo da Ordem
+                </p>
 
-          {order.closureNotes && (
-            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs text-emerald-400 font-semibold mb-1 flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Notas de Encerramento
-              </p>
-              <p className="text-xs text-emerald-300">{order.closureNotes}</p>
-            </div>
-          )}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(
+                    [
+                      "rascunho",
+                      "em_validacao",
+                      "aprovada",
+                      "em_execucao",
+                      "aguardando_encerramento",
+                      "encerrada",
+                    ] as OrderStatus[]
+                  ).map((status, index, array) => {
+                    const sc = STATUS_CONFIG[status];
+                    const current = order.status === status;
+                    const passed =
+                      sc.step < STATUS_CONFIG[order.status].step &&
+                      order.status !== "reprovada" &&
+                      order.status !== "cancelada";
 
-          {/* State flow visual */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {(
-              [
-                "rascunho",
-                "em_validacao",
-                "aprovada",
-                "em_execucao",
-                "aguardando_encerramento",
-                "encerrada",
-              ] as OrderStatus[]
-            ).map((s, i, arr) => {
-              const sc = STATUS_CONFIG[s];
-              const current = order.status === s;
-              const passed =
-                sc.step < STATUS_CONFIG[order.status].step &&
-                order.status !== "reprovada" &&
-                order.status !== "cancelada";
-              return (
-                <div key={s} className="flex items-center gap-1">
-                  <div
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${current
-                      ? `${sc.bg} border ${sc.color} ring-1 ring-offset-1 ring-offset-slate-900`
-                      : passed
-                        ? "bg-slate-800 text-emerald-400/60 border border-emerald-500/20"
-                        : "bg-slate-800/50 text-slate-600 border border-slate-800"
-                      }`}
-                  >
-                    {sc.label}
-                  </div>
-                  {i < arr.length - 1 && (
-                    <span className="text-slate-700 text-[10px]">→</span>
+                    return (
+                      <div key={status} className="flex items-center gap-1">
+                        <div
+                          className={`rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all ${
+                            current
+                              ? `${sc.bg} ${sc.color} border-current`
+                              : passed
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : "border-slate-700 bg-slate-800/60 text-slate-500 [.light_&]:border-slate-200 [.light_&]:bg-slate-100"
+                          }`}
+                        >
+                          {sc.label}
+                        </div>
+
+                        {index < array.length - 1 && (
+                          <span className="text-[10px] text-slate-600">→</span>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {(order.status === "reprovada" ||
+                    order.status === "cancelada") && (
+                    <div
+                      className={`mt-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${STATUS_CONFIG[order.status].bg} ${STATUS_CONFIG[order.status].color}`}
+                    >
+                      {STATUS_CONFIG[order.status].label}
+                    </div>
                   )}
                 </div>
-              );
-            })}
-            {(order.status === "reprovada" || order.status === "cancelada") && (
-              <div className="flex items-center gap-1">
-                <span className="text-slate-700 text-[10px]">|</span>
-                <div
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium ${STATUS_CONFIG[order.status].bg} border ${STATUS_CONFIG[order.status].color}`}
-                >
-                  {STATUS_CONFIG[order.status].label}
-                </div>
               </div>
-            )}
-          </div>
 
-          {/* Actions */}
-          {actions.length > 0 && (
-            <div className="flex gap-2 pt-1 flex-wrap">
-              {actions.map((a) => (
-                <Button
-                  key={a.action}
-                  size="sm"
-                  className={`text-xs ${a.cls}`}
-                  onClick={() => onAction(order, a.action)}
-                >
-                  <a.icon className="w-3.5 h-3.5 mr-1.5" />
-                  {a.label}
-                </Button>
-              ))}
+              {actions.length > 0 ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 [.light_&]:border-slate-200 [.light_&]:bg-white">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Ações disponíveis
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {actions.map((action) => (
+                      <Button
+                        key={action.action}
+                        size="sm"
+                        className={`rounded-xl text-xs font-bold ${action.cls}`}
+                        onClick={() => onAction(order, action.action)}
+                      >
+                        <action.icon className="mr-1.5 h-3.5 w-3.5" />
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-xs italic text-slate-500 [.light_&]:border-slate-200 [.light_&]:bg-white">
+                  {order.status === "em_execucao" &&
+                    "Técnico em execução — aguarde a conclusão para encerrar."}
+                  {(order.status === "encerrada" ||
+                    order.status === "cancelada") &&
+                    "Ordem finalizada. Nenhuma ação disponível."}
+                  {order.status !== "em_execucao" &&
+                    order.status !== "encerrada" &&
+                    order.status !== "cancelada" &&
+                    "Nenhuma ação disponível neste momento."}
+                </div>
+              )}
             </div>
-          )}
-
-          {order.status === "em_execucao" && (
-            <p className="text-xs text-slate-600 italic">
-              Técnico em execução — aguarde a conclusão para encerrar.
-            </p>
-          )}
-          {(order.status === "encerrada" || order.status === "cancelada") && (
-            <p className="text-xs text-slate-600 italic">
-              Ordem finalizada. Nenhuma ação disponível.
-            </p>
-          )}
+          </div>
         </div>
       )}
     </Card>
@@ -276,17 +452,19 @@ function OrderCard({
 }
 
 export function GestorOrdens() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [showNewOrder, setShowNewOrder] = useState(false);
 
-  // Action dialog states
   const [actionDialog, setActionDialog] = useState<{
     order: Order | null;
     action: string;
   }>({ order: null, action: "" });
+
   const [rejectReason, setRejectReason] = useState("");
   const [closureNotes, setClosureNotes] = useState("");
   const [closureAssetStatus, setClosureAssetStatus] = useState<string>("");
@@ -294,7 +472,6 @@ export function GestorOrdens() {
   const [dbAssets, setDbAssets] = useState<any[]>([]);
   const [dbTechnicians, setDbTechnicians] = useState<any[]>([]);
 
-  // New order form
   const [newForm, setNewForm] = useState<NewOrderForm>({
     asset: "",
     type: "",
@@ -305,14 +482,18 @@ export function GestorOrdens() {
 
   const loadOrders = async () => {
     setLoading(true);
+
     const [ordersData, assetsRes, techsRes] = await Promise.all([
       fetchOrders(),
       supabase.from("assets").select("name, status"),
-      supabase.from("profiles").select("name").eq("role", "tecnico")
+      supabase.from("profiles").select("name").eq("role", "tecnico"),
     ]);
+
     setOrders(ordersData);
+
     if (assetsRes.data) setDbAssets(assetsRes.data);
     if (techsRes.data) setDbTechnicians(techsRes.data);
+
     setLoading(false);
   };
 
@@ -320,15 +501,45 @@ export function GestorOrdens() {
     loadOrders();
   }, []);
 
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowNewOrder(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const refreshOrders = () => loadOrders();
 
-  const filtered = orders.filter((o) => {
-    const matchTab = activeTab === "all" || o.status === activeTab;
+  const countByStatus = (status: string) =>
+    status === "all"
+      ? orders.length
+      : orders.filter((order) => order.status === status).length;
+
+  const totalOrders = orders.length;
+  const inExecution = orders.filter(
+    (order) => order.status === "em_execucao"
+  ).length;
+  const closedOrders = orders.filter(
+    (order) => order.status === "encerrada"
+  ).length;
+  const pendingOrders = orders.filter((order) =>
+    ["rascunho", "em_validacao", "aguardando_encerramento", "reprovada"].includes(
+      order.status
+    )
+  ).length;
+
+  const filtered = orders.filter((order) => {
+    const normalizedSearch = search.toLowerCase().trim();
+
+    const matchTab = activeTab === "all" || order.status === activeTab;
+
     const matchSearch =
-      !search ||
-      o.asset.toLowerCase().includes(search.toLowerCase()) ||
-      o.description.toLowerCase().includes(search.toLowerCase()) ||
-      o.responsible.toLowerCase().includes(search.toLowerCase());
+      !normalizedSearch ||
+      order.asset.toLowerCase().includes(normalizedSearch) ||
+      order.description.toLowerCase().includes(normalizedSearch) ||
+      order.responsible.toLowerCase().includes(normalizedSearch) ||
+      order.createdAt.toLowerCase().includes(normalizedSearch);
+
     return matchTab && matchSearch;
   });
 
@@ -336,42 +547,79 @@ export function GestorOrdens() {
     if (action === "approve") {
       await updateOrder(order.id, { status: "aprovada" });
       refreshOrders();
-    } else if (action === "send_validation") {
+      return;
+    }
+
+    if (action === "send_validation") {
       await updateOrder(order.id, { status: "em_validacao" });
       refreshOrders();
-    } else if (action === "reopen") {
-      await updateOrder(order.id, { status: "rascunho", rejectionReason: undefined });
+      return;
+    }
+
+    if (action === "reopen") {
+      await updateOrder(order.id, {
+        status: "rascunho",
+        rejectionReason: undefined,
+      });
       refreshOrders();
-    } else if (action === "reject" || action === "cancel" || action === "close") {
+      return;
+    }
+
+    if (action === "reject" || action === "cancel" || action === "close") {
       setActionDialog({ order, action });
-      setClosureAssetStatus(""); // Reseta o status para não vir preenchido
+      setClosureAssetStatus("");
     }
   };
 
   const confirmAction = async () => {
     const { order, action } = actionDialog;
+
     if (!order) return;
 
     if (action === "reject") {
-      await updateOrder(order.id, { status: "reprovada", rejectionReason: rejectReason || "Reprovada pelo gestor." });
-    } else if (action === "cancel") {
+      await updateOrder(order.id, {
+        status: "reprovada",
+        rejectionReason: rejectReason || "Reprovada pelo gestor.",
+      });
+    }
+
+    if (action === "cancel") {
       await updateOrder(order.id, { status: "cancelada" });
-    } else if (action === "close") {
-      await updateOrder(order.id, { status: "encerrada", closureNotes: closureNotes || "Encerrada pelo gestor." });
+    }
+
+    if (action === "close") {
+      await updateOrder(order.id, {
+        status: "encerrada",
+        closureNotes: closureNotes || "Encerrada pelo gestor.",
+      });
+
       if (closureAssetStatus) {
-        await supabase.from("assets").update({ status: closureAssetStatus }).eq("name", order.asset);
+        await supabase
+          .from("assets")
+          .update({ status: closureAssetStatus })
+          .eq("name", order.asset);
       }
     }
 
     setActionDialog({ order: null, action: "" });
     setRejectReason("");
     setClosureNotes("");
+    setClosureAssetStatus("");
     refreshOrders();
   };
 
-  const handleNewOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newForm.asset || !newForm.type || !newForm.priority || !newForm.description || !newForm.responsible) return;
+  const handleNewOrder = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      !newForm.asset ||
+      !newForm.type ||
+      !newForm.priority ||
+      !newForm.description ||
+      !newForm.responsible
+    ) {
+      return;
+    }
 
     await addOrder({
       asset: newForm.asset,
@@ -382,97 +630,165 @@ export function GestorOrdens() {
       status: "rascunho",
     });
 
-    setNewForm({ asset: "", type: "", priority: "", description: "", responsible: "" });
+    setNewForm({
+      asset: "",
+      type: "",
+      priority: "",
+      description: "",
+      responsible: "",
+    });
+
     setShowNewOrder(false);
     refreshOrders();
   };
 
-  const countByStatus = (s: string) =>
-    s === "all" ? orders.length : orders.filter((o) => o.status === s).length;
-
   return (
-    <div className="p-6 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+    <div className="space-y-6 p-8">
+      {/* CABEÇALHO DA PÁGINA */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-white">Ordens de Manutenção</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Gerencie e acompanhe todas as ordens</p>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cyan-400">
+            <Sparkles className="h-3.5 w-3.5" />
+            Gestão operacional
+          </div>
+
+          <h1 className="text-3xl font-black text-white [.light_&]:text-slate-900">
+            Ordens de Manutenção
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Gerencie, filtre e acompanhe o ciclo das ordens de manutenção.
+          </p>
         </div>
+
         <Button
           onClick={() => setShowNewOrder(true)}
-          className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+          className="rounded-2xl bg-[#082f4d] px-5 py-6 text-white shadow-lg shadow-cyan-950/20 hover:bg-[#0b6680]"
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Nova Ordem
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-        <Input
-          placeholder="Buscar por ativo, descrição ou responsável..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-cyan-500"
+      {/* RESUMO */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="Total de Ordens"
+          value={totalOrders}
+          icon={ClipboardList}
+          tone="cyan"
+        />
+
+        <SummaryCard
+          label="Em Execução"
+          value={inExecution}
+          icon={Clock}
+          tone="amber"
+        />
+
+        <SummaryCard
+          label="Encerradas"
+          value={closedOrders}
+          icon={CheckCircle2}
+          tone="emerald"
+        />
+
+        <SummaryCard
+          label="Requerem Ação"
+          value={pendingOrders}
+          icon={AlertTriangle}
+          tone="red"
         />
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-1.5 flex-wrap">
-        {STATUS_TABS.map((tab) => {
-          const count = countByStatus(tab.key);
-          const active = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active
-                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
-                }`}
-            >
-              <Filter className="w-3 h-3" />
-              {tab.label}
-              {count > 0 && (
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-cyan-500/30 text-cyan-300" : "bg-slate-700 text-slate-400"
-                    }`}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* BUSCA E FILTROS */}
+      <Card className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-lg shadow-black/10 [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:shadow-slate-200/70">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
-      {/* Orders list */}
+          <Input
+            placeholder="Buscar por ativo, descrição, responsável ou data..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-12 rounded-2xl border-slate-700 bg-slate-950 pl-11 pr-11 text-white placeholder:text-slate-600 focus:border-cyan-500 [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900"
+          />
+
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full text-slate-500 transition-colors hover:text-cyan-400"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {STATUS_TABS.map((tab) => {
+            const count = countByStatus(tab.key);
+            const active = activeTab === tab.key;
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition-all ${
+                  active
+                    ? "border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-lg shadow-cyan-950/20"
+                    : "border-slate-800 text-slate-500 hover:border-slate-700 hover:bg-slate-800/70 hover:text-slate-300 [.light_&]:border-slate-200 [.light_&]:hover:bg-slate-100"
+                }`}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {tab.label}
+
+                {count > 0 && (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      active
+                        ? "bg-cyan-500/25 text-cyan-300"
+                        : "bg-slate-800 text-slate-400 [.light_&]:bg-slate-100"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* LISTA */}
       {loading ? (
-        <Card className="p-12 bg-slate-900 border-slate-800 text-center text-slate-400">
+        <Card className="rounded-3xl border border-slate-800 bg-slate-900 p-12 text-center text-slate-400 [.light_&]:border-slate-200 [.light_&]:bg-white">
           Carregando ordens de manutenção...
         </Card>
       ) : filtered.length === 0 ? (
-        <Card className="p-12 bg-slate-900 border-slate-800 text-center">
-          <FileText className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500">Nenhuma ordem encontrada</p>
+        <Card className="rounded-3xl border border-slate-800 bg-slate-900 p-12 text-center [.light_&]:border-slate-200 [.light_&]:bg-white">
+          <FileText className="mx-auto mb-3 h-10 w-10 text-slate-700" />
+          <p className="font-bold text-slate-400">Nenhuma ordem encontrada</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Ajuste os filtros ou crie uma nova ordem de manutenção.
+          </p>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((o) => (
-            <OrderCard key={o.id} order={o} onAction={handleAction} />
+        <div className="space-y-4">
+          {filtered.map((order) => (
+            <OrderCard key={order.id} order={order} onAction={handleAction} />
           ))}
         </div>
       )}
 
-      {/* Action confirmation dialog */}
+      {/* DIALOG DE AÇÃO */}
       <Dialog
         open={!!actionDialog.order}
         onOpenChange={() => setActionDialog({ order: null, action: "" })}
       >
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+        <DialogContent className="max-w-md rounded-3xl border-slate-700 bg-slate-900 text-white [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:text-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle>
               {actionDialog.action === "reject" && "Reprovar Ordem"}
               {actionDialog.action === "cancel" && "Cancelar Ordem"}
               {actionDialog.action === "close" && "Encerrar Ordem"}
@@ -481,22 +797,29 @@ export function GestorOrdens() {
 
           <div className="space-y-4 py-2">
             {actionDialog.order && (
-              <div className="p-3 bg-slate-800 rounded-lg">
-                <p className="text-xs text-slate-500">Ordem</p>
-                <p className="text-sm text-white font-medium">
-                  #{actionDialog.order.id.toString().padStart(4, "0")} · {actionDialog.order.asset}
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 [.light_&]:border-slate-200 [.light_&]:bg-slate-50">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Ordem
+                </p>
+
+                <p className="mt-1 text-sm font-bold text-white [.light_&]:text-slate-900">
+                  #{actionDialog.order.id.toString().padStart(4, "0")} ·{" "}
+                  {actionDialog.order.asset}
                 </p>
               </div>
             )}
 
             {actionDialog.action === "reject" && (
               <div className="space-y-2">
-                <Label className="text-slate-300 text-sm">Motivo da Reprovação *</Label>
+                <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                  Motivo da Reprovação *
+                </Label>
+
                 <Textarea
                   placeholder="Descreva o motivo da reprovação..."
                   value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 resize-none"
+                  onChange={(event) => setRejectReason(event.target.value)}
+                  className="resize-none rounded-2xl border-slate-700 bg-slate-950 text-white placeholder:text-slate-600 [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900"
                   rows={3}
                 />
               </div>
@@ -505,28 +828,39 @@ export function GestorOrdens() {
             {actionDialog.action === "close" && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">Atualizar Status do Ativo</Label>
+                  <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                    Atualizar Status do Ativo
+                  </Label>
+
                   <Select
                     value={closureAssetStatus}
                     onValueChange={setClosureAssetStatus}
                   >
-                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectTrigger className="rounded-2xl border-slate-700 bg-slate-950 text-white [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900">
                       <SelectValue placeholder="Mantenha o status atual ou escolha um novo" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="operational" className="text-white">Operacional</SelectItem>
-                      <SelectItem value="unavailable" className="text-white">Indisponível</SelectItem>
+
+                    <SelectContent className="border-slate-700 bg-slate-900">
+                      <SelectItem value="operational" className="text-white">
+                        Operacional
+                      </SelectItem>
+                      <SelectItem value="unavailable" className="text-white">
+                        Indisponível
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">Notas de Encerramento</Label>
+                  <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                    Notas de Encerramento
+                  </Label>
+
                   <Textarea
-                    placeholder="Observações do encerramento (opcional)..."
+                    placeholder="Observações do encerramento..."
                     value={closureNotes}
-                    onChange={(e) => setClosureNotes(e.target.value)}
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 resize-none"
+                    onChange={(event) => setClosureNotes(event.target.value)}
+                    className="resize-none rounded-2xl border-slate-700 bg-slate-950 text-white placeholder:text-slate-600 [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900"
                     rows={3}
                   />
                 </div>
@@ -534,8 +868,9 @@ export function GestorOrdens() {
             )}
 
             {actionDialog.action === "cancel" && (
-              <p className="text-sm text-slate-400">
-                Tem certeza que deseja cancelar esta ordem? Esta ação não pode ser desfeita.
+              <p className="text-sm text-slate-400 [.light_&]:text-slate-600">
+                Tem certeza que deseja cancelar esta ordem? Esta ação não pode
+                ser desfeita.
               </p>
             )}
           </div>
@@ -544,19 +879,20 @@ export function GestorOrdens() {
             <Button
               variant="outline"
               onClick={() => setActionDialog({ order: null, action: "" })}
-              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="rounded-2xl border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:text-slate-700"
             >
               Voltar
             </Button>
+
             <Button
               onClick={confirmAction}
-              className={
+              className={`rounded-2xl text-white ${
                 actionDialog.action === "close"
-                  ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                  ? "bg-emerald-600 hover:bg-emerald-500"
                   : actionDialog.action === "reject"
-                    ? "bg-red-600 hover:bg-red-500 text-white"
-                    : "bg-red-700 hover:bg-red-600 text-white"
-              }
+                    ? "bg-red-600 hover:bg-red-500"
+                    : "bg-red-700 hover:bg-red-600"
+              }`}
             >
               {actionDialog.action === "reject" && "Confirmar Reprovação"}
               {actionDialog.action === "cancel" && "Confirmar Cancelamento"}
@@ -566,118 +902,188 @@ export function GestorOrdens() {
         </DialogContent>
       </Dialog>
 
-      {/* New order dialog */}
+      {/* DIALOG NOVA ORDEM */}
       <Dialog open={showNewOrder} onOpenChange={setShowNewOrder}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-lg">
+        <DialogContent className="max-w-xl rounded-3xl border-slate-700 bg-slate-900 text-white [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:text-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-white">Nova Ordem de Manutenção</DialogTitle>
+            <DialogTitle>Nova Ordem de Manutenção</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleNewOrder} className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="text-slate-300 text-sm">Ativo *</Label>
+              <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                Ativo *
+              </Label>
+
               <Select
                 value={newForm.asset}
-                onValueChange={(v) => setNewForm((f) => ({ ...f, asset: v }))}
-                required
+                onValueChange={(value) =>
+                  setNewForm((form) => ({ ...form, asset: value }))
+                }
               >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="rounded-2xl border-slate-700 bg-slate-950 text-white [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900">
                   <SelectValue placeholder="Selecione o ativo" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+
+                <SelectContent className="border-slate-700 bg-slate-900">
                   {dbAssets.length === 0 ? (
-                    <SelectItem value="none" disabled className="text-slate-400">Nenhum ativo cadastrado</SelectItem>
-                  ) : dbAssets.map((a) => (
-                    <SelectItem key={a.name} value={a.name} textValue={a.name} className="text-white hover:bg-slate-700">
-                      <div className="flex items-center gap-2">
-                        <span>{a.name}</span>
-                        <div
-                          className={`w-2 h-2 rounded-full shrink-0 ${a.status === "operational"
-                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                              : a.status === "unavailable"
-                                ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-                                : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
-                            }`}
-                          title={
-                            a.status === "operational"
-                              ? "Operacional"
-                              : a.status === "unavailable"
-                                ? "Indisponível"
-                                : "Em Manutenção"
-                          }
-                        />
-                      </div>
+                    <SelectItem
+                      value="none"
+                      disabled
+                      className="text-slate-400"
+                    >
+                      Nenhum ativo cadastrado
                     </SelectItem>
-                  ))}
+                  ) : (
+                    dbAssets.map((asset) => (
+                      <SelectItem
+                        key={asset.name}
+                        value={asset.name}
+                        textValue={asset.name}
+                        className="text-white hover:bg-slate-700"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{asset.name}</span>
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${
+                              asset.status === "operational"
+                                ? "bg-emerald-500"
+                                : asset.status === "unavailable"
+                                  ? "bg-red-500"
+                                  : "bg-amber-500"
+                            }`}
+                          />
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-slate-300 text-sm">Tipo *</Label>
+                <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                  Tipo *
+                </Label>
+
                 <Select
                   value={newForm.type}
-                  onValueChange={(v) => setNewForm((f) => ({ ...f, type: v as MaintenanceType }))}
+                  onValueChange={(value) =>
+                    setNewForm((form) => ({
+                      ...form,
+                      type: value as MaintenanceType,
+                    }))
+                  }
                 >
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="rounded-2xl border-slate-700 bg-slate-950 text-white [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="preventiva" className="text-white">Preventiva</SelectItem>
-                    <SelectItem value="corretiva" className="text-white">Corretiva</SelectItem>
-                    <SelectItem value="preditiva" className="text-white">Preditiva</SelectItem>
+
+                  <SelectContent className="border-slate-700 bg-slate-900">
+                    <SelectItem value="preventiva" className="text-white">
+                      Preventiva
+                    </SelectItem>
+                    <SelectItem value="corretiva" className="text-white">
+                      Corretiva
+                    </SelectItem>
+                    <SelectItem value="preditiva" className="text-white">
+                      Preditiva
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-300 text-sm">Prioridade *</Label>
+                <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                  Prioridade *
+                </Label>
+
                 <Select
                   value={newForm.priority}
-                  onValueChange={(v) => setNewForm((f) => ({ ...f, priority: v as Priority }))}
+                  onValueChange={(value) =>
+                    setNewForm((form) => ({
+                      ...form,
+                      priority: value as Priority,
+                    }))
+                  }
                 >
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="rounded-2xl border-slate-700 bg-slate-950 text-white [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900">
                     <SelectValue placeholder="Prioridade" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="baixa" className="text-white">Baixa</SelectItem>
-                    <SelectItem value="media" className="text-white">Média</SelectItem>
-                    <SelectItem value="alta" className="text-white">Alta</SelectItem>
-                    <SelectItem value="critica" className="text-white">Crítica</SelectItem>
+
+                  <SelectContent className="border-slate-700 bg-slate-900">
+                    <SelectItem value="baixa" className="text-white">
+                      Baixa
+                    </SelectItem>
+                    <SelectItem value="media" className="text-white">
+                      Média
+                    </SelectItem>
+                    <SelectItem value="alta" className="text-white">
+                      Alta
+                    </SelectItem>
+                    <SelectItem value="critica" className="text-white">
+                      Crítica
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300 text-sm">Responsável Técnico *</Label>
+              <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                Responsável Técnico *
+              </Label>
+
               <Select
                 value={newForm.responsible}
-                onValueChange={(v) => setNewForm((f) => ({ ...f, responsible: v }))}
+                onValueChange={(value) =>
+                  setNewForm((form) => ({ ...form, responsible: value }))
+                }
               >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="rounded-2xl border-slate-700 bg-slate-950 text-white [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900">
                   <SelectValue placeholder="Selecione o técnico" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+
+                <SelectContent className="border-slate-700 bg-slate-900">
                   {dbTechnicians.length === 0 ? (
-                    <SelectItem value="none" disabled className="text-slate-400">Nenhum técnico cadastrado</SelectItem>
-                  ) : dbTechnicians.map((t) => (
-                    <SelectItem key={t.name} value={t.name} className="text-white hover:bg-slate-700">
-                      {t.name}
+                    <SelectItem
+                      value="none"
+                      disabled
+                      className="text-slate-400"
+                    >
+                      Nenhum técnico cadastrado
                     </SelectItem>
-                  ))}
+                  ) : (
+                    dbTechnicians.map((technician) => (
+                      <SelectItem
+                        key={technician.name}
+                        value={technician.name}
+                        className="text-white hover:bg-slate-700"
+                      >
+                        {technician.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300 text-sm">Descrição *</Label>
+              <Label className="text-sm text-slate-300 [.light_&]:text-slate-700">
+                Descrição *
+              </Label>
+
               <Textarea
                 placeholder="Descreva o serviço a ser realizado..."
                 value={newForm.description}
-                onChange={(e) => setNewForm((f) => ({ ...f, description: e.target.value }))}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 resize-none"
+                onChange={(event) =>
+                  setNewForm((form) => ({
+                    ...form,
+                    description: event.target.value,
+                  }))
+                }
+                className="resize-none rounded-2xl border-slate-700 bg-slate-950 text-white placeholder:text-slate-600 [.light_&]:border-slate-200 [.light_&]:bg-slate-50 [.light_&]:text-slate-900"
                 rows={3}
                 required
               />
@@ -688,11 +1094,15 @@ export function GestorOrdens() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowNewOrder(false)}
-                className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                className="rounded-2xl border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white [.light_&]:border-slate-200 [.light_&]:bg-white [.light_&]:text-slate-700"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white">
+
+              <Button
+                type="submit"
+                className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-500"
+              >
                 Criar Rascunho
               </Button>
             </DialogFooter>
