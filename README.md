@@ -11,7 +11,7 @@
 <strong>Universidade Federal do Maranhão (UFMA)</strong><br>
 Centro de Ciências Exatas e Tecnologia<br>
 Curso de Engenharia da Computação<br>
-Disciplinas: Projeto e Desenvolvimento de Software | Banco de Dados<br><br>
+Disciplinas: Projeto e Desenvolvimento de Software<br><br>
 
 <strong>Discentes:</strong><br>
 Renata Costa Rocha<br>
@@ -1750,21 +1750,228 @@ Não deve ser utilizada com `/rest/v1/` no final.
 
 ## 28. Relação com Projeto e Desenvolvimento de Software
 
-O desenvolvimento do FIXER contempla práticas associadas à Engenharia de Software, tais como:
+O desenvolvimento do **FIXER** está diretamente relacionado aos princípios da disciplina de **Projeto e Desenvolvimento de Software**, pois o sistema foi construído a partir de um processo organizado de identificação de problema, levantamento de requisitos, modelagem da solução, implementação incremental, validação funcional e documentação técnica.
 
+O projeto não se limita à criação de telas. Ele representa a construção de uma aplicação web com fluxo de uso definido, separação de responsabilidades, controle de perfis, persistência de dados, organização modular do código e preocupação com manutenção futura.
+
+---
+
+### 28.1 Levantamento e Compreensão do Problema
+
+O primeiro passo do desenvolvimento foi compreender o problema central relacionado à **gestão de manutenção de ativos**.
+
+Em muitos contextos, o controle de manutenção ainda ocorre de forma manual, por meio de planilhas, mensagens, anotações ou registros descentralizados. Isso dificulta o acompanhamento das ordens de serviço, a identificação de responsáveis, a rastreabilidade das intervenções e a tomada de decisão.
+
+A partir dessa análise, o FIXER foi proposto como uma solução para centralizar informações, organizar o fluxo das ordens de manutenção e permitir que gestores e técnicos atuem de forma mais estruturada.
+
+---
+
+### 28.2 Definição de Requisitos
+
+O projeto contempla requisitos funcionais e não funcionais, definidos a partir das necessidades dos usuários e do fluxo de manutenção.
+
+Entre os principais requisitos funcionais, destacam-se:
+
+- permitir autenticação de usuários;
+- diferenciar perfis de acesso entre gestor e técnico;
+- cadastrar e consultar ativos;
+- criar ordens de manutenção;
+- atribuir ordens a responsáveis técnicos;
+- acompanhar status das ordens;
+- permitir registro de atividade técnica;
+- permitir conclusão da execução pelo técnico;
+- permitir encerramento formal pelo gestor;
+- consultar histórico de manutenção;
+- visualizar relatórios e indicadores;
+- editar dados do perfil do usuário.
+
+Entre os requisitos não funcionais, destacam-se:
+
+- interface clara e organizada;
+- navegação consistente;
+- boa separação entre módulos;
+- uso de componentes reutilizáveis;
+- persistência de dados;
+- responsividade;
+- legibilidade visual;
+- segurança no controle de acesso;
+- facilidade de manutenção e evolução do código.
+
+---
+
+### 28.3 Modelagem da Solução
+
+A modelagem foi uma etapa essencial para transformar o problema identificado em uma solução estruturada.
+
+Foram utilizados diferentes diagramas para representar aspectos importantes do sistema, como:
+
+- **diagrama de casos de uso**, para representar as interações entre usuários e funcionalidades;
+- **diagrama de classes**, para organizar as entidades principais do sistema;
+- **diagrama de estados**, para representar o ciclo de vida das ordens de manutenção;
+- **diagrama de atividades**, para descrever o fluxo operacional da manutenção;
+- **modelo entidade-relacionamento**, para organizar os dados do sistema;
+- **modelo relacional**, para representar a estrutura física do banco;
+- **diagrama de sequência**, para demonstrar a comunicação entre interface, aplicação e banco de dados.
+
+Esses modelos contribuíram para orientar a implementação, reduzir ambiguidades e facilitar a compreensão da arquitetura do sistema.
+
+---
+
+### 28.4 Separação de Responsabilidades
+
+Uma decisão importante do projeto foi a separação clara entre os perfis **gestor** e **técnico**.
+
+O gestor possui uma visão mais estratégica e administrativa, com acesso a indicadores, relatórios, ativos, ordens, atribuições e encerramento formal das demandas.
+
+O técnico possui uma visão operacional, voltada ao acompanhamento das ordens atribuídas, início da execução, registro de atividades e conclusão técnica.
+
+Essa separação melhora a organização do sistema, reduz a complexidade da interface para cada tipo de usuário e aproxima a solução de um cenário real de uso.
+
+---
+
+### 28.5 Componentização e Organização do Código
+
+O FIXER foi desenvolvido com uma estrutura modular, utilizando componentes separados para cada parte importante da aplicação.
+
+Essa organização facilita:
+
+- manutenção do código;
+- reutilização de componentes;
+- correção de erros;
+- evolução incremental;
+- leitura por outros desenvolvedores;
+- separação entre telas, rotas, autenticação e serviços;
+- organização das responsabilidades dentro do front-end.
+
+A utilização de **React** e **TypeScript** contribui para uma base mais organizada, tipada e escalável, reduzindo erros comuns durante o desenvolvimento.
+
+---
+
+### 28.6 Controle de Rotas e Fluxo de Navegação
+
+O sistema utiliza controle de rotas para organizar a navegação entre os módulos.
+
+Entre as principais telas do sistema, destacam-se:
+
+- Login;
+- Cadastro;
+- Recuperação de senha;
+- Dashboard do Gestor;
+- Dashboard do Técnico;
+- Ativos;
+- Ordens;
+- Atribuições;
+- Minhas Ordens;
+- Histórico;
+- Relatórios;
+- Configurações.
+
+Essa estrutura permite que o usuário acesse as funcionalidades de forma organizada, mantendo coerência entre os módulos e facilitando a experiência de uso.
+
+---
+
+### 28.7 Persistência de Dados e Integração com Banco
+
+O projeto também se relaciona diretamente com práticas de desenvolvimento de software por utilizar persistência de dados por meio do **Supabase PostgreSQL**.
+
+A integração com banco permite armazenar e recuperar informações como:
+
+- usuários;
+- ativos cadastrados;
+- ordens de manutenção;
+- responsáveis;
+- status das ordens;
+- registros técnicos;
+- histórico operacional;
+- informações de perfil.
+
+Essa persistência transforma o projeto em uma aplicação funcional, e não apenas em uma interface estática.
+
+---
+
+### 28.8 Versionamento e Desenvolvimento Incremental
+
+O desenvolvimento do FIXER também contempla práticas de versionamento com **Git** e **GitHub**.
+
+O uso de versionamento permite:
+
+- registrar o histórico de alterações;
+- criar branches para novas funcionalidades;
+- evitar alterações diretas na branch principal;
+- controlar versões do projeto;
+- revisar mudanças antes da integração;
+- documentar a evolução da solução.
+
+O projeto foi desenvolvido de forma incremental, com melhorias sucessivas na interface, nos fluxos, nas telas, nos componentes e na documentação.
+
+---
+
+### 28.9 Validação Funcional do MVP
+
+O FIXER foi estruturado como um **MVP funcional**, ou seja, uma versão inicial capaz de demonstrar os principais fluxos do sistema.
+
+O MVP permite validar:
+
+- o acesso ao sistema;
+- a separação entre gestor e técnico;
+- o cadastro de ativos;
+- a criação e acompanhamento de ordens;
+- a atribuição de responsáveis;
+- o registro de atividades técnicas;
+- a conclusão de execução;
+- o encerramento gerencial;
+- a consulta de histórico;
+- a visualização de relatórios e indicadores.
+
+Essa validação prática permite verificar se a proposta atende ao problema identificado e se os fluxos principais fazem sentido para os usuários.
+
+---
+
+### 28.10 Documentação Técnica e Acadêmica
+
+A documentação do projeto também faz parte do processo de desenvolvimento de software.
+
+O README foi estruturado para apresentar:
+
+- descrição do projeto;
+- contexto e justificativa;
+- objetivos;
+- personas;
+- requisitos;
+- arquitetura da informação;
+- diagramas;
+- wireframes;
+- telas do MVP;
+- tecnologias utilizadas;
+- instruções de execução;
+- limitações;
+- implementações futuras;
+- contribuição acadêmica.
+
+Essa documentação facilita a compreensão do projeto por professores, avaliadores, colegas e futuros desenvolvedores.
+
+---
+
+### 28.11 Aplicação dos Conceitos da Disciplina
+
+O FIXER aplica, na prática, diversos conceitos trabalhados em Projeto e Desenvolvimento de Software, como:
+
+- análise de problema;
+- definição de escopo;
 - levantamento de requisitos;
-- definição de problema;
-- modelagem de solução;
-- separação de responsabilidades;
-- componentização;
-- controle de rotas;
-- versionamento;
-- melhoria incremental;
-- uso de Pull Requests;
-- organização de código;
-- documentação;
+- modelagem de sistemas;
+- prototipação;
+- desenvolvimento incremental;
+- organização modular;
+- controle de versão;
 - integração com banco de dados;
-- validação prática da interface.
+- documentação;
+- validação de MVP;
+- separação de perfis de usuário;
+- melhoria contínua da interface.
+
+Dessa forma, o projeto demonstra a passagem de uma ideia inicial para uma solução funcional, documentada e organizada, representando uma aplicação prática dos conceitos de Engenharia de Software em um problema real de gestão de manutenção.
+
 
 ---
 
@@ -1932,11 +2139,13 @@ git push origin nome-da-sua-branch
 
 ## 36. Contribuição Acadêmica
 
-A principal contribuição deste projeto consiste na aplicação prática de conceitos de **Projeto e Desenvolvimento de Software** e **Banco de Dados** no desenvolvimento de uma plataforma web funcional para gestão de manutenção.
+A principal contribuição deste projeto consiste na aplicação prática de conceitos da disciplina de **Projeto e Desenvolvimento de Software** no desenvolvimento de uma plataforma web funcional para gestão de manutenção de ativos.
 
-O projeto demonstra como requisitos, personas, arquitetura da informação, banco de dados, componentização, autenticação, versionamento e documentação podem ser articulados para criar uma solução tecnológica com potencial de uso real.
+O projeto demonstra como levantamento de requisitos, definição de problema, personas, arquitetura da informação, modelagem de sistema, prototipação, componentização, autenticação, controle de rotas, versionamento e documentação podem ser articulados para criar uma solução tecnológica com potencial de uso real.
 
-Além disso, o FIXER evidencia a importância da organização da informação e da rastreabilidade em sistemas de manutenção, contribuindo para uma visão mais estruturada da gestão de ativos.
+Além disso, o **FIXER** evidencia a importância da organização da informação, da separação de responsabilidades entre usuários e da rastreabilidade em sistemas de manutenção, contribuindo para uma visão mais estruturada da gestão de ativos.
+
+Do ponto de vista acadêmico, o sistema representa a transformação de uma necessidade prática em um **MVP funcional**, passando pelas etapas de análise, planejamento, desenvolvimento, validação da interface e documentação. Dessa forma, o projeto reforça a importância de desenvolver software de maneira organizada, incremental e alinhada às necessidades dos usuários.
 
 ---
 
