@@ -28,7 +28,15 @@ Luis Eduardo Baima do Lago Melonio Junior
 </table>
 
 <hr>
-
+<p align="center">
+  <table align="center">
+    <tr>
+      <td style="border: 4px solid #0a1f44; padding: 12px;">
+        <img src="imagens/fixer.png" alt="FIXER" width="450">
+      </td>
+    </tr>
+  </table>
+</p>
 <h1 align="center">FIXER</h1>
 
 <p align="center">
@@ -48,25 +56,6 @@ Luis Eduardo Baima do Lago Melonio Junior
   <img src="https://img.shields.io/badge/Tailwind-CSS-38BDF8?style=flat-square">
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square">
   <img src="https://img.shields.io/badge/GitHub-Versionamento-black?style=flat-square">
-</p>
-
----
-
-<p align="center">
-  <table align="center">
-    <tr>
-      <td style="border: 4px solid #0a1f44; padding: 12px;">
-        <img src="imagens/fixer.png" alt="FIXER" width="450">
-      </td>
-    </tr>
-  </table>
-</p>
-
-<p align="center">
-  <h3 align="center">Sistema Integrado de Gestão de Ativos e Manutenção</h3>
-  <p align="center">
-    <em>Gestão, rastreabilidade, confiabilidade e controle operacional de ativos.</em>
-  </p>
 </p>
 
 ---
@@ -876,24 +865,6 @@ A interface foi construída considerando:
 - agrupamento visual das informações;
 - diferenciação entre gestor e técnico;
 - suporte a tema claro e escuro.
-
-Caso exista projeto no Figma, o link pode ser inserido abaixo:
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center">
-
-<a href="INSIRA_AQUI_O_LINK_DO_FIGMA" target="_blank">
-<strong>🔗 Acessar o projeto FIXER no Figma</strong>
-</a>
-
-</td>
-</tr>
-</table>
-
-</div>
 
 ---
 
@@ -1820,9 +1791,3 @@ Curso de Engenharia da Computação
 
 ---
 
-<p align="center">
-  <strong>FIXER</strong><br>
-  Gestão de Manutenção de Ativos<br><br>
-  <em>Sistema Integrado de Gestão de Ativos e Manutenção.</em>
-</p>
-````
