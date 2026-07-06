@@ -1,6 +1,4 @@
-Claro. Abaixo está o **README.md completo em Markdown** para o **FIXER**, seguindo o estilo robusto do modelo que você mandou, mas adaptado ao seu projeto de gestão de manutenção, Supabase, React, dashboards de gestor/técnico, ordens, ativos e interface atualizada. Usei o README de referência que você enviou como base de estrutura. 
 
-````markdown
 <p align="center">
   <img src="imagens/ufma.png" alt="UFMA" width="180">
 </p>
