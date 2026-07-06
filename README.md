@@ -1588,7 +1588,6 @@ O fluxo utilizado inclui:
 | Git | Controle de versão |
 | GitHub | Hospedagem do repositório |
 | Visual Studio Code | Ambiente de desenvolvimento |
-| Figma | Prototipação visual |
 | Draw.io | Diagramas e documentação visual |
 
 ---
